@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deepakraj B - Resume</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --page: #ffffff;
+      --text: #1f2933;
+      --muted: #5f6b7a;
+      --heading: #111827;
+      --accent: #1f4e79;
+      --accent-soft: #eaf2f8;
+      --border: #d9e2ec;
+      --chip: #eef4f8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+      padding: 32px;
+    }
+
+    .resume {
+      max-width: 920px;
+      margin: 0 auto;
+      background: var(--page);
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 34px 42px 28px;
+      background: linear-gradient(135deg, #0f2f4f, #1f4e79);
+      color: #ffffff;
+    }
+
+    .name {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: 17px;
+      font-weight: 500;
+      color: #dcebf7;
+      margin-bottom: 18px;
+    }
+
+    .contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      font-size: 13.5px;
+      color: #f2f7fb;
+    }
+
+    .contact span,
+    .contact a {
+      color: #f2f7fb;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .body {
+      padding: 34px 42px 42px;
+    }
+
+    .section {
+      margin-bottom: 26px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 13px;
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      background: var(--border);
+      flex: 1;
+    }
+
+    .summary {
+      font-size: 14.8px;
+      color: var(--text);
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 15px 18px;
+      border-radius: 10px;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 10px 18px;
+      font-size: 14.2px;
+    }
+
+    .skill-label {
+      font-weight: 700;
+      color: var(--heading);
+    }
+
+    .skill-value {
+      color: var(--muted);
+    }
+
+    .item {
+      margin-bottom: 20px;
+    }
+
+    .item:last-child {
+      margin-bottom: 0;
+    }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 4px;
+    }
+
+    .item-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--heading);
+    }
+
+    .item-meta {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: 2px;
+    }
+
+    .item-subtitle {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      padding-left: 19px;
+      margin-top: 7px;
+    }
+
+    li {
+      font-size: 14.2px;
+      color: var(--text);
+      margin-bottom: 6px;
+      padding-left: 2px;
+    }
+
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    .project {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 15px;
+      background: #ffffff;
+    }
+
+    .project:last-child {
+      margin-bottom: 0;
+    }
+
+    .project-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .project-name {
+      font-size: 15.8px;
+      font-weight: 800;
+      color: var(--heading);
+    }
+
+    .project-stack {
+      font-size: 12.8px;
+      color: var(--accent);
+      font-weight: 700;
+      background: var(--chip);
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .education-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 10px;
+    }
+
+    .degree {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--heading);
+    }
+
+    .institution {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .certifications {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .cert {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--chip);
+      border: 1px solid var(--border);
+      padding: 7px 11px;
+      border-radius: 999px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .resume {
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .header {
+        padding: 28px 36px 22px;
+      }
+
+      .body {
+        padding: 28px 36px 34px;
+      }
+
+      .section {
+        margin-bottom: 20px;
+      }
+
+      .project {
+        break-inside: avoid;
+      }
+
+      a {
+        color: inherit;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+      }
+
+      .header,
+      .body {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .name {
+        font-size: 30px;
+      }
+
+      .item-head,
+      .education-row {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .item-meta {
+        white-space: normal;
+      }
+
+      .skills-grid {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="resume">
+    <header class="header">
+      <h1 class="name">Deepakraj B</h1>
+      <div class="title">AI-Focused Software Developer | Backend Engineering | System Design | Product Engineering</div>
+
+      <div class="contact">
+        <span>Chennai, Tamil Nadu</span>
+        <span>9500756675</span>
+        <a href="mailto:deepakrajbm@zohomail.in">deepakrajbm@zohomail.in</a>
+        <a href="#">GitHub</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </header>
+
+    <section class="body">
+      <section class="section">
+        <h2 class="section-title">Professional Summary</h2>
+        <p class="summary">
+          AI-focused Software Developer with strong experience in backend engineering, system design, and product engineering.
+          Experienced in converting unclear business requirements into working products across Java backend, React/Next.js,
+          Android, FastAPI, LangGraph, and automation workflows. Well-versed in building AI-enabled systems beyond prompt-based
+          development, including requirement breakdown, architecture decisions, context design, agentic workflows, validation layers,
+          error handling, fallback flows, evaluation, and safe integration with real systems. Strong problem solver with ownership
+          in debugging complex edge cases and delivering end-to-end solutions in a product-based company environment.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Technical Skills</h2>
+        <div class="skills-grid">
+          <div class="skill-label">Languages</div>
+          <div class="skill-value">Java, Python, JavaScript, PostgreSQL, MySQL</div>
+
+          <div class="skill-label">Backend & APIs</div>
+          <div class="skill-value">Spring Boot, FastAPI, REST APIs, Microservice Design, Authentication, Authorization</div>
+
+          <div class="skill-label">AI Engineering</div>
+          <div class="skill-value">LangChain, LangGraph, Agentic Workflows, NL2SQL, Prompt Engineering, Context Design, AI Validation, Guardrails</div>
+
+          <div class="skill-label">Frontend & Mobile</div>
+          <div class="skill-value">React, Next.js, Android Application Development, Responsive UI Development</div>
+
+          <div class="skill-label">Databases & Tools</div>
+          <div class="skill-value">Redis, SQLGlot, Docker, Git, AWS EC2, ERPNext, Frappe, Pytest</div>
+
+          <div class="skill-label">Core Strengths</div>
+          <div class="skill-value">System Design, Problem Solving, Requirement Analysis, Debugging, Product Delivery, Workflow Automation</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Professional Experience</h2>
+
+        <div class="item">
+          <div class="item-head">
+            <div>
+              <div class="item-title">Kritilabs Technologies Private Limited</div>
+              <div class="item-subtitle">Junior Software Developer</div>
+            </div>
+            <div class="item-meta">Chennai, India | July 2024 – Present</div>
+          </div>
+
+          <ul>
+            <li>Built intelligent backend systems enabling natural language interaction with MySQL and PostgreSQL databases using FastAPI, FastMCP, LangGraph, and SQLGlot.</li>
+            <li>Designed stateful agent workflows with intent classification, intelligent routing, workflow cancellation, context switching, and automated session recovery.</li>
+            <li>Developed secure SQL generation flows with validation layers to reduce incorrect queries, injection risks, and unsafe database operations.</li>
+            <li>Applied system design thinking to structure backend services, API flows, state management, failure handling, and scalable integration points.</li>
+            <li>Built and customized ERPNext/Frappe modules across HRMS, Purchase, Manufacturing, and Service workflows, with deployment support on AWS.</li>
+            <li>Modernized React applications by upgrading class components to functional components and improving UI flows for Cargo and Vehicle Tracking Systems.</li>
+            <li>Worked in a product-based company environment, handling real customer requirements, production issues, field feedback, and end-to-end delivery ownership.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Key Projects</h2>
+
+        <div class="project">
+          <div class="project-title">
+            <div class="project-name">SentinelKote — Offline RFID Weapon Inventory Tracking System</div>
+            <div class="project-stack">Java Backend · React · Android · RFID</div>
+          </div>
+          <ul>
+            <li>Replaced manual Army weapon ledger workflows with an offline RFID-based scanning and audit system for weapon issue, return, inventory visibility, and scan logs.</li>
+            <li>Stayed on-site at an Army camp for 2 weeks, directly gathered requirements from users, understood field-level constraints, and converted them into working product workflows.</li>
+            <li>Delivered the complete system end-to-end within 2 weeks, including Android application, React UI, Java backend APIs, offline workflow handling, and RFID scan integration.</li>
+            <li>Designed the system to reduce manual ledger dependency, improve traceability, and support faster inventory verification in real operational environments.</li>
+          </ul>
+        </div>
+
+        <div class="project">
+          <div class="project-title">
+            <div class="project-name">AutoSDLC — PRD to Execution Automation Platform</div>
+            <div class="project-stack">AI Automation · Workflow Design · Redmine</div>
+          </div>
+          <ul>
+            <li>Built an AI-assisted automation system that converts Product Requirement Documents into structured Epics, User Stories, and development Tasks.</li>
+            <li>Integrated generated tasks with Redmine to move planning outputs directly into execution workflows and reduce manual SDLC documentation effort.</li>
+            <li>Designed the flow with practical AI considerations such as requirement decomposition, structured output design, validation, error correction, and human-review readiness.</li>
+            <li>Positioned the system to help teams convert high-level requirements into actionable engineering work with better consistency and faster planning cycles.</li>
+          </ul>
+        </div>
+
+        <div class="project">
+          <div class="project-title">
+            <div class="project-name">Agentic NL2SQL Engine</div>
+            <div class="project-stack">FastAPI · LangGraph · SQLGlot · Redis</div>
+          </div>
+          <ul>
+            <li>Developed an AI-powered backend engine that converts natural language questions into validated SQL queries for relational databases.</li>
+            <li>Implemented agentic routing, workflow state handling, SQL validation, fallback logic, and Redis-backed session management for reliable user interactions.</li>
+            <li>Focused on safe AI integration by handling ambiguous requests, incorrect outputs, query validation, and controlled database execution boundaries.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Education</h2>
+
+        <div class="education-row">
+          <div>
+            <div class="degree">Bachelor of Technology – Computer Science Engineering</div>
+            <div class="institution">Sastra Deemed to be University, Thanjavur, Tamil Nadu</div>
+          </div>
+          <div class="item-meta">CGPA: 7.29</div>
+        </div>
+
+        <div class="education-row">
+          <div>
+            <div class="degree">Senior Secondary & Secondary Education</div>
+            <div class="institution">Town Higher Secondary School, Thanjavur, Tamil Nadu</div>
+          </div>
+          <div class="item-meta">XII: 69.3% | X: 81.1%</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Certifications</h2>
+        <div class="certifications">
+          <div class="cert">Software Engineering – IBM</div>
+          <div class="cert">Python Crash Course – Google</div>
+          <div class="cert">Machine Learning – Simplilearn</div>
+        </div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
