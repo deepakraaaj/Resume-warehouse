@@ -368,7 +368,7 @@ async function recompileAllResumes() {
   }
 }
 
-// View mode switcher (HTML, PDF, Audit, Diff)
+// View mode switcher (HTML, Editor, PDF, Audit, Diff)
 function setViewMode(mode) {
   state.activeViewMode = mode;
   document.querySelectorAll('.mode-tab').forEach(t => {
@@ -376,12 +376,549 @@ function setViewMode(mode) {
   });
 
   elements.a4Wrapper.parentElement.classList.toggle('active', mode === 'html');
+  document.getElementById('viewEditor').classList.toggle('active', mode === 'editor');
   document.getElementById('viewPdf').classList.toggle('active', mode === 'pdf');
   document.getElementById('viewAudit').classList.toggle('active', mode === 'audit');
   document.getElementById('viewDiff').classList.toggle('active', mode === 'diff');
 
   // Toggle zoom controls visibility (only relevant in HTML mode)
   document.getElementById('viewportToolbar').style.display = (mode === 'html') ? 'flex' : 'none';
+
+  if (mode === 'editor' && state.selectedResume) {
+    loadEditorForResume(state.selectedResume);
+  }
+}
+
+// ==========================================================================
+// Side-by-Side Editor & Headroom Engine
+// ==========================================================================
+
+let editorState = {
+  rawHtml: '',
+  originalHtml: '',
+  filename: '',
+  blocks: {
+    roleTitle: '',
+    profile: '',
+    projects: [],
+    skills: [],
+    certs: []
+  },
+  activeSubtab: 'blocks',
+  headroomPt: 45.0,
+  isDirty: false
+};
+
+// Elements for Editor
+const editorElements = {
+  headroomBadge: document.getElementById('headroomBadge'),
+  headroomStatus: document.getElementById('headroomStatus'),
+  headroomMeterFill: document.getElementById('headroomMeterFill'),
+  headroomSubtext: document.getElementById('headroomSubtext'),
+  rulesLinterBadge: document.getElementById('rulesLinterBadge'),
+  rulesCheckList: document.getElementById('rulesCheckList'),
+  ruleViolationsBox: document.getElementById('ruleViolationsBox'),
+  editorBlocksContainer: document.getElementById('editorBlocksContainer'),
+  rawHtmlTextarea: document.getElementById('rawHtmlTextarea'),
+  btnFormatRaw: document.getElementById('btnFormatRaw'),
+  btnRevertEditor: document.getElementById('btnRevertEditor'),
+  btnLiveAuditHeadroom: document.getElementById('btnLiveAuditHeadroom'),
+  btnSaveResumeEditor: document.getElementById('btnSaveResumeEditor'),
+  editorPreviewFrame: document.getElementById('editorPreviewFrame'),
+  editorPageFitIndicator: document.getElementById('editorPageFitIndicator'),
+};
+
+// Load raw resume and parse into visual component blocks
+async function loadEditorForResume(resume) {
+  if (!resume) return;
+  editorState.filename = resume.filename;
+
+  try {
+    const res = await fetch(`/api/resume/raw?file=${resume.filename}`);
+    const data = await res.json();
+    if (data.success) {
+      editorState.rawHtml = data.html;
+      editorState.originalHtml = data.html;
+      editorElements.rawHtmlTextarea.value = data.html;
+
+      parseHtmlToBlocks(data.html);
+      renderEditorBlocks();
+      updateEditorPreview();
+      runRuleLinter(data.html);
+
+      // Initial headroom check
+      if (resume.pdfMetrics && resume.pdfMetrics.trailing_space) {
+        updateHeadroomUI(resume.pdfMetrics.trailing_space, resume.pdfMetrics.pages);
+      } else {
+        updateHeadroomFromDom();
+      }
+    }
+  } catch (err) {
+    showToast('Failed to load editor source: ' + err.message, 'error');
+  }
+}
+
+// Parse HTML string into structured editable blocks
+function parseHtmlToBlocks(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Role Title
+  const roleEl = doc.querySelector('.role-title');
+  editorState.blocks.roleTitle = roleEl ? roleEl.textContent.trim() : '';
+
+  // Profile text
+  const profileEl = doc.querySelector('.profile-text');
+  editorState.blocks.profile = profileEl ? profileEl.innerHTML.trim() : '';
+
+  // Project blocks
+  const projectEls = doc.querySelectorAll('.project-block');
+  editorState.blocks.projects = Array.from(projectEls).map((p, idx) => {
+    const nameEl = p.querySelector('.project-name');
+    const techEl = p.querySelector('.project-tech');
+    const bulletEls = p.querySelectorAll('ul.bullet-list li');
+
+    return {
+      id: `proj_${idx}`,
+      enabled: p.style.display !== 'none',
+      name: nameEl ? nameEl.textContent.trim() : `Project ${idx + 1}`,
+      tech: techEl ? techEl.textContent.trim() : '',
+      bullets: Array.from(bulletEls).map((b, bIdx) => ({
+        id: `proj_${idx}_b_${bIdx}`,
+        enabled: b.style.display !== 'none',
+        text: b.innerHTML.trim()
+      }))
+    };
+  });
+
+  // Technical skills
+  const skillRows = doc.querySelectorAll('.skills-grid .skill-row');
+  editorState.blocks.skills = Array.from(skillRows).map((row, idx) => {
+    const labelEl = row.querySelector('.skill-label');
+    const valEl = row.querySelector('.skill-value');
+    return {
+      id: `skill_${idx}`,
+      label: labelEl ? labelEl.textContent.trim() : '',
+      value: valEl ? valEl.textContent.trim() : ''
+    };
+  });
+}
+
+// Render component block cards with toggles
+function renderEditorBlocks() {
+  const b = editorState.blocks;
+
+  let html = `
+    <!-- Block 1: Role Title & Profile Summary -->
+    <div class="editor-block-card">
+      <div class="block-header">
+        <span class="block-title">PROFILE & ROLE BANNER</span>
+        <span class="headroom-badge pass">Summary Justified</span>
+      </div>
+      <div class="block-field-group">
+        <label class="field-label">TARGET ROLE TITLE:</label>
+        <input type="text" class="field-input" id="inputRoleTitle" value="${escapeHtml(b.roleTitle)}">
+      </div>
+      <div class="block-field-group">
+        <label class="field-label">PROFILE SUMMARY (Strictly Justified per Rule 3):</label>
+        <textarea class="field-textarea" id="inputProfileText" rows="4">${b.profile}</textarea>
+      </div>
+    </div>
+
+    <!-- Block 2: Experience & Projects with Component Toggles -->
+    <div class="editor-block-card">
+      <div class="block-header">
+        <span class="block-title">PROJECTS & EXPERIENCE (COMPONENT TOGGLES)</span>
+        <span style="font-size: 11px; color: var(--accent-cyan); font-family: var(--font-mono);">Toggle to fit A4</span>
+      </div>
+  `;
+
+  b.projects.forEach((proj, pIdx) => {
+    html += `
+      <div class="editor-block-card ${proj.enabled ? '' : 'disabled'}" style="margin-top: 8px; background: #0a0f1d;">
+        <div class="block-header">
+          <label class="toggle-label">
+            <input type="checkbox" class="proj-toggle" data-pidx="${pIdx}" ${proj.enabled ? 'checked' : ''}>
+            <strong>${escapeHtml(proj.name)}</strong>
+          </label>
+          <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);">
+            ${proj.bullets.filter(x => x.enabled).length} / ${proj.bullets.length} bullets active
+          </span>
+        </div>
+
+        <div class="block-field-group">
+          <label class="field-label">TECH STACK BADGE:</label>
+          <input type="text" class="field-input proj-tech-input" data-pidx="${pIdx}" value="${escapeHtml(proj.tech)}">
+        </div>
+
+        <div class="bullets-group">
+          <label class="field-label">PROJECT BULLET POINTS (Toggle on/off to adjust headroom):</label>
+    `;
+
+    proj.bullets.forEach((bullet, bIdx) => {
+      html += `
+        <div class="bullet-row ${bullet.enabled ? '' : 'disabled'}">
+          <input type="checkbox" class="bullet-check" data-pidx="${pIdx}" data-bidx="${bIdx}" ${bullet.enabled ? 'checked' : ''} title="Include this bullet point in resume">
+          <textarea class="bullet-input" data-pidx="${pIdx}" data-bidx="${bIdx}" rows="2">${bullet.text}</textarea>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`; // Close experience block card
+
+  // Block 3: Technical Skills
+  html += `
+    <div class="editor-block-card">
+      <div class="block-header">
+        <span class="block-title">TECHNICAL SKILLS MATRIX</span>
+        <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">2-Column Grid</span>
+      </div>
+  `;
+
+  b.skills.forEach((s, sIdx) => {
+    html += `
+      <div class="block-field-group">
+        <label class="field-label">${escapeHtml(s.label)}</label>
+        <input type="text" class="field-input skill-val-input" data-sidx="${sIdx}" value="${escapeHtml(s.value)}">
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  editorElements.editorBlocksContainer.innerHTML = html;
+  bindBlockEditorEvents();
+}
+
+// Bind live change events for structured blocks
+function bindBlockEditorEvents() {
+  const container = editorElements.editorBlocksContainer;
+
+  // Role title & Profile
+  const roleInput = container.querySelector('#inputRoleTitle');
+  if (roleInput) {
+    roleInput.addEventListener('input', () => {
+      editorState.blocks.roleTitle = roleInput.value;
+      rebuildHtmlFromBlocks();
+    });
+  }
+
+  const profileInput = container.querySelector('#inputProfileText');
+  if (profileInput) {
+    profileInput.addEventListener('input', () => {
+      editorState.blocks.profile = profileInput.value;
+      rebuildHtmlFromBlocks();
+    });
+  }
+
+  // Project toggle checkboxes
+  container.querySelectorAll('.proj-toggle').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const pIdx = parseInt(chk.getAttribute('data-pidx'), 10);
+      editorState.blocks.projects[pIdx].enabled = chk.checked;
+      renderEditorBlocks();
+      rebuildHtmlFromBlocks();
+    });
+  });
+
+  // Project tech inputs
+  container.querySelectorAll('.proj-tech-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const pIdx = parseInt(input.getAttribute('data-pidx'), 10);
+      editorState.blocks.projects[pIdx].tech = input.value;
+      rebuildHtmlFromBlocks();
+    });
+  });
+
+  // Bullet toggles
+  container.querySelectorAll('.bullet-check').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const pIdx = parseInt(chk.getAttribute('data-pidx'), 10);
+      const bIdx = parseInt(chk.getAttribute('data-bidx'), 10);
+      editorState.blocks.projects[pIdx].bullets[bIdx].enabled = chk.checked;
+      renderEditorBlocks();
+      rebuildHtmlFromBlocks();
+    });
+  });
+
+  // Bullet text inputs
+  container.querySelectorAll('.bullet-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const pIdx = parseInt(input.getAttribute('data-pidx'), 10);
+      const bIdx = parseInt(input.getAttribute('data-bidx'), 10);
+      editorState.blocks.projects[pIdx].bullets[bIdx].text = input.value;
+      rebuildHtmlFromBlocks();
+    });
+  });
+
+  // Skills inputs
+  container.querySelectorAll('.skill-val-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const sIdx = parseInt(input.getAttribute('data-sidx'), 10);
+      editorState.blocks.skills[sIdx].value = input.value;
+      rebuildHtmlFromBlocks();
+    });
+  });
+}
+
+// Rebuild HTML from blocks and live-update
+function rebuildHtmlFromBlocks() {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(editorState.rawHtml, 'text/html');
+
+  // Update role title
+  const roleEl = doc.querySelector('.role-title');
+  if (roleEl) roleEl.textContent = editorState.blocks.roleTitle;
+
+  // Update profile
+  const profileEl = doc.querySelector('.profile-text');
+  if (profileEl) profileEl.innerHTML = editorState.blocks.profile;
+
+  // Update projects and bullets
+  const projectEls = doc.querySelectorAll('.project-block');
+  editorState.blocks.projects.forEach((proj, pIdx) => {
+    const pEl = projectEls[pIdx];
+    if (pEl) {
+      pEl.style.display = proj.enabled ? '' : 'none';
+
+      const techEl = pEl.querySelector('.project-tech');
+      if (techEl) techEl.textContent = proj.tech;
+
+      const bulletEls = pEl.querySelectorAll('ul.bullet-list li');
+      proj.bullets.forEach((bullet, bIdx) => {
+        const bEl = bulletEls[bIdx];
+        if (bEl) {
+          bEl.style.display = (proj.enabled && bullet.enabled) ? '' : 'none';
+          bEl.innerHTML = bullet.text;
+        }
+      });
+    }
+  });
+
+  // Update skills
+  const skillRows = doc.querySelectorAll('.skills-grid .skill-row');
+  editorState.blocks.skills.forEach((s, sIdx) => {
+    const row = skillRows[sIdx];
+    if (row) {
+      const valEl = row.querySelector('.skill-value');
+      if (valEl) valEl.textContent = s.value;
+    }
+  });
+
+  const updatedHtml = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  editorState.rawHtml = updatedHtml;
+  editorElements.rawHtmlTextarea.value = updatedHtml;
+  editorState.isDirty = true;
+
+  updateEditorPreview();
+  runRuleLinter(updatedHtml);
+  updateHeadroomFromDom();
+}
+
+// Update right preview iframe
+function updateEditorPreview() {
+  editorElements.editorPreviewFrame.srcdoc = editorState.rawHtml;
+}
+
+// Update live headroom gauge from DOM measurements
+function updateHeadroomFromDom() {
+  setTimeout(() => {
+    try {
+      const iframeDoc = editorElements.editorPreviewFrame.contentDocument || editorElements.editorPreviewFrame.contentWindow.document;
+      if (!iframeDoc) return;
+      const pageEl = iframeDoc.querySelector('.page');
+      if (!pageEl) return;
+
+      // In A4 @ 96 DPI: 297mm = 1122.5px = 841.92 pt
+      const pageHeightPx = pageEl.scrollHeight;
+      const a4LimitPx = 1122.5;
+      const headroomPx = a4LimitPx - pageHeightPx;
+      const headroomPt = Math.round(headroomPx * 0.75 * 10) / 10;
+
+      const pageCount = pageHeightPx > a4LimitPx ? 2 : 1;
+      updateHeadroomUI(headroomPt, pageCount);
+    } catch {
+      // Cross-origin fallback
+    }
+  }, 120);
+}
+
+// Update visual headroom meter and badges
+function updateHeadroomUI(headroomPt, pageCount) {
+  editorState.headroomPt = headroomPt;
+  const badge = editorElements.headroomBadge;
+  const fill = editorElements.headroomMeterFill;
+  const status = editorElements.headroomStatus;
+  const fitIndicator = editorElements.editorPageFitIndicator;
+
+  if (pageCount === 1 && headroomPt >= 35) {
+    badge.className = 'headroom-badge pass';
+    badge.textContent = `${headroomPt} pt remaining`;
+    fill.className = 'headroom-meter-fill pass';
+    fill.style.width = `${Math.min(100, Math.max(10, (headroomPt / 70) * 100))}%`;
+    status.textContent = 'Comfortable (1 Page)';
+    fitIndicator.className = 'page-fit-indicator';
+    fitIndicator.textContent = 'Page 1 / 1 (Fits A4)';
+  } else if (pageCount === 1 && headroomPt >= 10) {
+    badge.className = 'headroom-badge warn';
+    badge.textContent = `${headroomPt} pt remaining`;
+    fill.className = 'headroom-meter-fill warn';
+    fill.style.width = `${Math.min(100, Math.max(10, (headroomPt / 70) * 100))}%`;
+    status.textContent = 'Tight (1 Page)';
+    fitIndicator.className = 'page-fit-indicator';
+    fitIndicator.textContent = 'Page 1 / 1 (Tight)';
+  } else {
+    badge.className = 'headroom-badge danger';
+    badge.textContent = `Overflow (${pageCount} Pages)`;
+    fill.className = 'headroom-meter-fill danger';
+    fill.style.width = '100%';
+    status.textContent = `OVERFLOW DETECTED: Page 2 created! Deselect a bullet.`;
+    fitIndicator.className = 'page-fit-indicator warn';
+    fitIndicator.textContent = `OVERFLOW: ${pageCount} Pages!`;
+  }
+}
+
+// Rule Linter for Agentic Resume Rules (.agents/AGENTS.md)
+function runRuleLinter(html) {
+  const violations = [];
+
+  // Check 1: No long dashes
+  if (/[\u2013\u2014]/.test(html)) {
+    violations.push('Long dash (– or —) found. Use standard hyphen (-).');
+  }
+
+  // Check 2: No Emojis
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
+  if (emojiRegex.test(html)) {
+    violations.push('Emoji detected. Use clean text labels or SVG icons.');
+  }
+
+  // Check 3: No AI Buzzwords
+  const buzzwords = [
+    'agentic', 'groundbreaking', 'seamlessly', 'spearheaded',
+    'game-changer', 'synergy', 'paradigm', 'transformative'
+  ];
+  for (const bw of buzzwords) {
+    if (new RegExp(`\\b${bw}\\b`, 'i').test(html)) {
+      violations.push(`Banned buzzword "${bw}" detected. Use practical engineering outcome.`);
+    }
+  }
+
+  // Check 4: width 210mm
+  if (/\.page\s*\{[^}]*width\s*:\s*210mm/i.test(html)) {
+    violations.push('Hardcoded "width: 210mm" in .page found. Use "width: 100%".');
+  }
+
+  const badge = editorElements.rulesLinterBadge;
+  const box = editorElements.ruleViolationsBox;
+
+  if (violations.length === 0) {
+    badge.className = 'linter-badge pass';
+    badge.textContent = '100% Passed';
+    box.classList.add('hidden');
+    box.innerHTML = '';
+  } else {
+    badge.className = 'linter-badge warn';
+    badge.textContent = `${violations.length} Rule Warnings`;
+    box.classList.remove('hidden');
+    box.innerHTML = violations.map(v => `<div>⚠️ ${v}</div>`).join('');
+  }
+}
+
+// Save resume from editor to disk & recompile
+async function saveResumeFromEditor() {
+  if (!state.selectedResume) return;
+  const btn = editorElements.btnSaveResumeEditor;
+  btn.disabled = true;
+  btn.innerHTML = `<span>Saving & Compiling...</span>`;
+
+  try {
+    const res = await fetch('/api/resume/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: state.selectedResume.filename,
+        html: editorState.rawHtml
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Saved and compiled ${data.pdfName} successfully!`, 'success');
+      editorState.originalHtml = editorState.rawHtml;
+      editorState.isDirty = false;
+      await loadResumes();
+      await loadGitStatus();
+
+      if (data.metrics) {
+        updateHeadroomUI(data.metrics.trailing_space, data.metrics.pages);
+      }
+    } else {
+      showToast(`Save failed: ${data.error}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Save error: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span>Save & Compile PDF</span>
+    `;
+  }
+}
+
+// Live pdfplumber check
+async function runLivePdfplumberAudit() {
+  const btn = editorElements.btnLiveAuditHeadroom;
+  btn.disabled = true;
+  btn.textContent = 'Auditing...';
+
+  try {
+    const res = await fetch('/api/resume/check-headroom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: state.selectedResume.filename,
+        html: editorState.rawHtml
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.metrics) {
+      const m = data.metrics;
+      updateHeadroomUI(m.trailing_space, m.pages);
+      showToast(`pdfplumber verified: ${m.pages} page(s) | ${m.trailing_space} pt trailing space`, m.pages === 1 ? 'success' : 'warn');
+    }
+  } catch (err) {
+    showToast('Audit failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Check pdfplumber';
+  }
+}
+
+// Revert editor to last saved file
+function revertEditor() {
+  if (confirm('Revert all unsaved changes in editor?')) {
+    editorState.rawHtml = editorState.originalHtml;
+    editorElements.rawHtmlTextarea.value = editorState.originalHtml;
+    parseHtmlToBlocks(editorState.originalHtml);
+    renderEditorBlocks();
+    updateEditorPreview();
+    runRuleLinter(editorState.originalHtml);
+    updateHeadroomFromDom();
+    showToast('Reverted to last saved version', 'info');
+  }
+}
+
+// Helper: Escape HTML strings for attributes
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Zoom control functions
@@ -514,6 +1051,55 @@ function setupEventListeners() {
   elements.btnCloseGitModal.addEventListener('click', closeGitModal);
   elements.btnCancelModal.addEventListener('click', closeGitModal);
   elements.btnExecuteCommit.addEventListener('click', executeCommit);
+
+  // Editor subtab buttons
+  document.querySelectorAll('.subtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.getAttribute('data-tab');
+      editorState.activeSubtab = tab;
+      document.getElementById('tabBlocks').classList.toggle('active', tab === 'blocks');
+      document.getElementById('tabRaw').classList.toggle('active', tab === 'raw');
+    });
+  });
+
+  // Raw HTML textarea live input
+  if (editorElements.rawHtmlTextarea) {
+    editorElements.rawHtmlTextarea.addEventListener('input', (e) => {
+      editorState.rawHtml = e.target.value;
+      editorState.isDirty = true;
+      updateEditorPreview();
+      runRuleLinter(editorState.rawHtml);
+      updateHeadroomFromDom();
+    });
+  }
+
+  // Format raw button
+  if (editorElements.btnFormatRaw) {
+    editorElements.btnFormatRaw.addEventListener('click', () => {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(editorState.rawHtml, 'text/html');
+        editorState.rawHtml = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+        editorElements.rawHtmlTextarea.value = editorState.rawHtml;
+        showToast('Formatted HTML', 'info');
+      } catch {
+        // ignore
+      }
+    });
+  }
+
+  // Editor actions
+  if (editorElements.btnSaveResumeEditor) {
+    editorElements.btnSaveResumeEditor.addEventListener('click', saveResumeFromEditor);
+  }
+  if (editorElements.btnRevertEditor) {
+    editorElements.btnRevertEditor.addEventListener('click', revertEditor);
+  }
+  if (editorElements.btnLiveAuditHeadroom) {
+    editorElements.btnLiveAuditHeadroom.addEventListener('click', runLivePdfplumberAudit);
+  }
 }
 
 // Initialize on page load

@@ -238,6 +238,56 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
+function validateResumeRules(html) {
+  const violations = [];
+
+  // Rule 1: No long dashes
+  if (/[\u2013\u2014]/.test(html)) {
+    violations.push({
+      rule: 'No Long Dashes',
+      message: 'Found en-dash (–) or em-dash (—). Use standard hyphens (-) per .agents/AGENTS.md.',
+      severity: 'error'
+    });
+  }
+
+  // Rule 2: No Emojis
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
+  if (emojiRegex.test(html)) {
+    violations.push({
+      rule: 'No Emojis',
+      message: 'Found emojis. Use clean professional text labels and SVG icons.',
+      severity: 'error'
+    });
+  }
+
+  // Rule 3: No AI Buzzwords
+  const buzzwords = [
+    'agentic', 'groundbreaking', 'seamlessly', 'spearheaded',
+    'game-changer', 'synergy', 'paradigm', 'transformative'
+  ];
+  for (const bw of buzzwords) {
+    const reg = new RegExp(`\\b${bw}\\b`, 'i');
+    if (reg.test(html)) {
+      violations.push({
+        rule: 'No AI Buzzwords',
+        message: `Found banned buzzword "${bw}". Highlight practical, measurable outcomes instead.`,
+        severity: 'warning'
+      });
+    }
+  }
+
+  // Rule 4: Never hardcode width: 210mm
+  if (/\.page\s*\{[^}]*width\s*:\s*210mm/i.test(html)) {
+    violations.push({
+      rule: 'Page Setup Rule',
+      message: 'Never hardcode "width: 210mm" in .page. Use "width: 100%" with padding.',
+      severity: 'error'
+    });
+  }
+
+  return violations;
+}
+
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
@@ -263,6 +313,89 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: false, error: err.message }));
     }
+    return;
+  }
+
+  if (pathname === '/api/resume/raw' && req.method === 'GET') {
+    try {
+      const filename = parsedUrl.searchParams.get('file');
+      if (!filename) throw new Error('File parameter required');
+      const htmlPath = path.join(HTML_DIR, path.basename(filename));
+      if (!fs.existsSync(htmlPath)) throw new Error('File not found');
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      const violations = validateResumeRules(html);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, html, violations }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/resume/save' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { filename, html } = JSON.parse(body || '{}');
+        if (!filename || !html) throw new Error('Filename and HTML content required');
+        
+        const htmlPath = path.join(HTML_DIR, path.basename(filename));
+        fs.writeFileSync(htmlPath, html, 'utf8');
+        
+        // Invalidate metrics cache for corresponding PDF
+        const pdfName = PDF_MAPPINGS[filename] || filename.replace('.html', '.pdf');
+        const pdfPath = path.join(PDF_DIR, pdfName);
+        metricsCache.delete(pdfPath);
+
+        // Compile to PDF
+        const compileResult = await compileResume(filename);
+        const violations = validateResumeRules(html);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          pdfName: compileResult.pdfName,
+          metrics: compileResult.metrics,
+          violations
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/resume/check-headroom' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { html, filename } = JSON.parse(body || '{}');
+        if (!html) throw new Error('HTML content required');
+
+        const tempHtml = `/tmp/check_${Date.now()}.html`;
+        const tempPdf = `/tmp/check_${Date.now()}.pdf`;
+
+        fs.writeFileSync(tempHtml, html, 'utf8');
+        await execAsync(`google-chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${tempPdf}" "file://${tempHtml}"`);
+        const metrics = await getPdfMetrics(tempPdf);
+
+        // Cleanup temp files
+        fs.unlink(tempHtml, () => {});
+        fs.unlink(tempPdf, () => {});
+
+        const violations = validateResumeRules(html);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, metrics, violations }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
     return;
   }
 

@@ -99,6 +99,7 @@
           <!-- View Modes -->
           <div class="view-mode-tabs">
             <button class="mode-tab active" data-mode="html">Live HTML</button>
+            <button class="mode-tab" data-mode="editor">⚡ Side-by-Side Editor</button>
             <button class="mode-tab" data-mode="pdf">PDF Reader</button>
             <button class="mode-tab" data-mode="audit">pdfplumber Audit</button>
             <button class="mode-tab" data-mode="diff">Git Diff</button>
@@ -159,6 +160,94 @@
         <div class="view-content active" id="viewHtml">
           <div class="a4-sheet-wrapper" id="a4Wrapper">
             <iframe id="htmlFrame" src="about:blank" title="Resume Live View"></iframe>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Editor Container -->
+        <div class="view-content" id="viewEditor">
+          <div class="editor-split-layout">
+            <!-- Left: Controls & Blocks -->
+            <div class="editor-panel">
+              <!-- Headroom Gauge Banner -->
+              <div class="headroom-card">
+                <div class="headroom-header">
+                  <div class="headroom-title-group">
+                    <span class="headroom-label">A4 VERTICAL HEADROOM GAUGE</span>
+                    <span class="headroom-badge pass" id="headroomBadge">45.0 pt remaining</span>
+                  </div>
+                  <span class="headroom-status" id="headroomStatus">Comfortable (1 Page)</span>
+                </div>
+                <div class="headroom-meter-track">
+                  <div class="headroom-meter-fill pass" id="headroomMeterFill" style="width: 75%;"></div>
+                </div>
+                <div class="headroom-subtext" id="headroomSubtext">
+                  Target: ~40-55 pt trailing space. Zero overflow beyond 1 page strictly enforced.
+                </div>
+              </div>
+
+              <!-- Rule Compliance Real-Time Linter -->
+              <div class="rules-linter-card" id="rulesLinterCard">
+                <div class="linter-header">
+                  <span class="linter-title">AGENT RULES COMPLIANCE (.agents/AGENTS.md)</span>
+                  <span class="linter-badge pass" id="rulesLinterBadge">100% Passed</span>
+                </div>
+                <div class="rules-check-list" id="rulesCheckList">
+                  <div class="rule-chip pass">✓ No Emojis</div>
+                  <div class="rule-chip pass">✓ Hyphens Only (No –/—)</div>
+                  <div class="rule-chip pass">✓ No AI Buzzwords</div>
+                  <div class="rule-chip pass">✓ width: 100% (No 210mm)</div>
+                  <div class="rule-chip pass">✓ Symmetric Margins</div>
+                </div>
+                <div class="rule-violations-box hidden" id="ruleViolationsBox"></div>
+              </div>
+
+              <!-- Editor Sub-Tabs -->
+              <div class="editor-subtabs">
+                <button class="subtab-btn active" data-tab="blocks">Component Block Editor</button>
+                <button class="subtab-btn" data-tab="raw">Raw HTML Source</button>
+              </div>
+
+              <!-- Tab 1: Visual Block Editor & Component Toggles -->
+              <div class="subtab-content active" id="tabBlocks">
+                <div class="editor-blocks-container" id="editorBlocksContainer">
+                  <!-- Rendered dynamically from current HTML -->
+                  <div class="loading-state">Loading resume structure...</div>
+                </div>
+              </div>
+
+              <!-- Tab 2: Raw Code Editor -->
+              <div class="subtab-content" id="tabRaw">
+                <div class="raw-code-container">
+                  <div class="raw-toolbar">
+                    <span>Direct HTML Source (Changes live-update right preview)</span>
+                    <button class="btn btn-outline" id="btnFormatRaw">Format</button>
+                  </div>
+                  <textarea id="rawHtmlTextarea" spellcheck="false"></textarea>
+                </div>
+              </div>
+
+              <!-- Editor Footer Actions -->
+              <div class="editor-footer">
+                <button class="btn btn-secondary" id="btnRevertEditor">Revert to Saved</button>
+                <button class="btn btn-outline" id="btnLiveAuditHeadroom">Check pdfplumber</button>
+                <button class="btn btn-primary" id="btnSaveResumeEditor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Save & Compile PDF</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Real-time Live A4 Preview -->
+            <div class="editor-preview-panel">
+              <div class="editor-preview-toolbar">
+                <span class="preview-mode-tag">LIVE A4 HOT-RELOAD PREVIEW</span>
+                <span class="page-fit-indicator" id="editorPageFitIndicator">Page 1 / 1 (Fits A4)</span>
+              </div>
+              <div class="editor-a4-wrapper" id="editorA4Wrapper">
+                <div class="a4-cutoff-marker" title="A4 Height Limit (297mm)"><span>Page 1 Boundary (297mm)</span></div>
+                <iframe id="editorPreviewFrame" src="about:blank" title="Live Editor Preview"></iframe>
+              </div>
+            </div>
           </div>
         </div>
 
