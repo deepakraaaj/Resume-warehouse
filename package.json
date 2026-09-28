@@ -1,4 +1,14 @@
 {
+  "name": "resume-warehouse",
+  "version": "1.0.0",
+  "description": "Resume warehouse, A4 layout verification, and interactive management dashboard",
+  "type": "module",
+  "scripts": {
+    "start": "node dashboard/server.mjs",
+    "dashboard": "node dashboard/server.mjs",
+    "compile": "python3 scripts/compile_resumes.py",
+    "audit": "python3 scripts/compile_resumes.py"
+  },
   "dependencies": {
     "pngjs": "^7.0.0"
   }

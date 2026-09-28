@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Warehouse - Engineering Management & Version Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">Resume Warehouse</div>
+        <div class="brand-subtitle">Deepakraj B - Tailored Engineering Profiles</div>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="git-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
+        <span class="branch-name" id="currentBranch">main</span>
+        <span class="git-divider">|</span>
+        <span class="commit-hash" id="latestCommitHash">---</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn btn-secondary" id="btnRecompileAll" title="Recompile all HTML templates to PDF">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>Recompile All</span>
+      </button>
+      <button class="btn btn-primary" id="btnOpenGitModal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
+        <span>Version Control</span>
+        <span class="dirty-badge hidden" id="dirtyCounter">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <section class="toolbar">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by role, framework, or skill (e.g. React, Python, Java, Docker)..." autocomplete="off">
+      <button id="clearSearch" class="btn-clear hidden">×</button>
+    </div>
+
+    <div class="category-tabs" id="categoryTabs">
+      <button class="cat-pill active" data-category="ALL">All Resumes <span class="count-badge" id="allCount">0</span></button>
+      <button class="cat-pill" data-category="Full Stack">Full Stack</button>
+      <button class="cat-pill" data-category="Forward Deployed">Forward Deployed</button>
+      <button class="cat-pill" data-category="Backend">Backend / Kotlin</button>
+      <button class="cat-pill" data-category="Python & AI">Python & AI</button>
+      <button class="cat-pill" data-category="ERP / Enterprise">ERPNext</button>
+    </div>
+  </section>
+
+  <!-- Main Split Layout -->
+  <main class="main-layout">
+    <!-- Left: Resume Cards Catalog -->
+    <aside class="catalog-panel">
+      <div class="catalog-header">
+        <div class="catalog-count-label">Available Profiles (<span id="visibleCount">0</span>)</div>
+        <button class="btn-icon" id="btnRefreshList" title="Refresh file catalog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        </button>
+      </div>
+
+      <div class="resume-list" id="resumeList">
+        <!-- Rendered dynamically -->
+        <div class="loading-state">Scanning resumes...</div>
+      </div>
+    </aside>
+
+    <!-- Right: Active Resume Preview & Inspector -->
+    <section class="preview-panel">
+      <!-- Active Resume Header -->
+      <div class="preview-header">
+        <div class="preview-meta">
+          <h2 class="active-title" id="activeTitle">Select a Resume</h2>
+          <div class="active-subtext" id="activeSubtext">Choose any resume from the left catalog to inspect and manage.</div>
+        </div>
+
+        <div class="preview-controls">
+          <!-- View Modes -->
+          <div class="view-mode-tabs">
+            <button class="mode-tab active" data-mode="html">Live HTML</button>
+            <button class="mode-tab" data-mode="pdf">PDF Reader</button>
+            <button class="mode-tab" data-mode="audit">pdfplumber Audit</button>
+            <button class="mode-tab" data-mode="diff">Git Diff</button>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="action-btn-group">
+            <button class="btn btn-outline" id="btnCompileActive" title="Recompile this resume to PDF">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Compile PDF</span>
+            </button>
+            <button class="btn btn-outline" id="btnOpenExternal" title="Open raw HTML in new browser tab">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Open HTML</span>
+            </button>
+            <a class="btn btn-primary" id="btnDownloadPdf" href="#" download target="_blank">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download PDF</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Metrics Banner -->
+      <div class="audit-banner" id="auditBanner">
+        <div class="audit-item">
+          <span class="audit-label">PAGE COUNT:</span>
+          <span class="audit-val pass" id="metricPages">1 / 1</span>
+        </div>
+        <div class="audit-item">
+          <span class="audit-label">MARGIN SYMMETRY:</span>
+          <span class="audit-val" id="metricMargins">L: -- | R: -- (Delta: --)</span>
+        </div>
+        <div class="audit-item">
+          <span class="audit-label">TRAILING SPACE:</span>
+          <span class="audit-val" id="metricTrailing">-- pt</span>
+        </div>
+        <div class="audit-item">
+          <span class="audit-label">RULE COMPLIANCE:</span>
+          <span class="audit-val pass" id="metricStatus">A4 STRICT (1 PAGE)</span>
+        </div>
+      </div>
+
+      <!-- Zoom & Scale Controller -->
+      <div class="viewport-toolbar" id="viewportToolbar">
+        <div class="zoom-controls">
+          <button class="btn-zoom" id="btnZoomOut">−</button>
+          <span class="zoom-level" id="zoomLevel">100%</span>
+          <button class="btn-zoom" id="btnZoomIn">+</button>
+          <button class="btn-zoom-reset" id="btnZoomFit">Fit A4</button>
+        </div>
+        <div class="file-path-indicator" id="filePathIndicator">HTML/Deepakraj_Full_Stack_Engineer_Resume.html</div>
+      </div>
+
+      <!-- Active Content Viewport -->
+      <div class="viewport-container" id="viewportContainer">
+        <!-- Live HTML Container -->
+        <div class="view-content active" id="viewHtml">
+          <div class="a4-sheet-wrapper" id="a4Wrapper">
+            <iframe id="htmlFrame" src="about:blank" title="Resume Live View"></iframe>
+          </div>
+        </div>
+
+        <!-- PDF Reader Container -->
+        <div class="view-content" id="viewPdf">
+          <iframe id="pdfFrame" src="about:blank" title="PDF Viewer"></iframe>
+        </div>
+
+        <!-- Audit Details Container -->
+        <div class="view-content" id="viewAudit">
+          <div class="audit-details-card" id="auditDetailsCard">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Git Diff Container -->
+        <div class="view-content" id="viewDiff">
+          <div class="diff-view-wrapper">
+            <div class="diff-header" id="diffHeader">No uncommitted changes in this file.</div>
+            <pre class="diff-code" id="diffCode">Clean working tree.</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Git Version Control Modal -->
+  <div class="modal-overlay hidden" id="gitModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-title">Git Version Control & Snapshot</div>
+          <div class="modal-subtitle">Track, stage, and commit changes across your resume templates</div>
+        </div>
+        <button class="btn-close" id="btnCloseGitModal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Changes list -->
+        <div class="git-status-section">
+          <div class="section-label">WORKING TREE STATUS:</div>
+          <div class="changed-files-list" id="changedFilesList">
+            <div class="clean-note">No unstaged changes. Working directory is clean!</div>
+          </div>
+        </div>
+
+        <!-- Commit Form -->
+        <div class="commit-form-section">
+          <label for="commitMessageInput" class="section-label">COMMIT MESSAGE:</label>
+          <textarea id="commitMessageInput" rows="3" placeholder="e.g. feat(resume): refine Sentinel Kote bullets with React UI and offline sync metrics"></textarea>
+          <div class="commit-hint">Standard conventional commits (feat, fix, style, docs) recommended.</div>
+        </div>
+
+        <!-- Recent Commit Log -->
+        <div class="recent-commits-section">
+          <div class="section-label">RECENT COMMITS:</div>
+          <div class="commits-timeline" id="commitsTimeline">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelModal">Close</button>
+        <button class="btn btn-primary" id="btnExecuteCommit">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
+          <span>Commit & Version Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
