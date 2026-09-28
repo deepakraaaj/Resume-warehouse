@@ -11,7 +11,28 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="app">
+  <main class="auth" id="auth" hidden>
+    <form class="auth-card" id="signInForm">
+      <h1>Resume Desk</h1>
+      <p class="muted">Sign in to your resumes.</p>
+      <label>Email<input id="signInEmail" type="email" autocomplete="username" required></label>
+      <label>Password<input id="signInPassword" type="password" autocomplete="current-password" required></label>
+      <p class="auth-error" id="signInError" role="alert" hidden></p>
+      <button type="submit" class="btn primary wide" id="signInBtn">Sign in</button>
+    </form>
+
+    <form class="auth-card" id="passwordForm" hidden>
+      <h1>Choose your password</h1>
+      <p class="muted">Replace the temporary password you were given. Use at least 10 characters.</p>
+      <label>Current password<input id="currentPassword" type="password" autocomplete="current-password" required></label>
+      <label>New password<input id="newPassword" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label>New password again<input id="newPassword2" type="password" autocomplete="new-password" minlength="10" required></label>
+      <p class="auth-error" id="passwordError" role="alert" hidden></p>
+      <button type="submit" class="btn primary wide" id="passwordBtn">Save password</button>
+    </form>
+  </main>
+
+  <div class="app" id="app">
     <aside class="rail" id="rail">
       <header class="rail-head">
         <div class="rail-title">
@@ -40,6 +61,14 @@
           <button type="submit" class="btn small">Commit</button>
         </div>
       </form>
+
+      <footer class="account" id="accountBar" hidden>
+        <span class="account-email" id="accountEmail"></span>
+        <span class="account-actions">
+          <a class="text-btn" id="exportLink" href="/api/export" download>Download all</a>
+          <button type="button" class="text-btn" id="signOutBtn">Sign out</button>
+        </span>
+      </footer>
     </aside>
 
     <main class="desk">

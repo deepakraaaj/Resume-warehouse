@@ -147,10 +147,17 @@ export function setRole(html, role) {
   return out.replace(/(<title>[^<]*?-\s*)([^<]*?)(\s*Resume<\/title>)/i, (m, a, _, b) => `${a}${escapeText(titleCase(role.trim().toUpperCase()))}${b}`);
 }
 
-const slug = s => s.trim().split(/[^A-Za-z0-9]+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join('_');
+export const slug = s => s.trim().split(/[^A-Za-z0-9]+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join('_');
+
+export const baseSourceName = (role, company) => `Deepakraj_${slug(role)}${company?.trim() ? `_${slug(company)}` : ''}_Resume`;
+
+// Everything the dashboard shows about a resume that can be read from its HTML alone.
+export function describeHtml(html, file) {
+  return { ...describeRole(html, file), issues: lint(html, visibleText(html)) };
+}
 
 export function newSourceName(role, company) {
-  const base = `Deepakraj_${slug(role)}${company?.trim() ? `_${slug(company)}` : ''}_Resume`;
+  const base = baseSourceName(role, company);
   const taken = new Set(listSources());
   let name = `${base}.html`;
   for (let i = 2; taken.has(name) || fs.existsSync(path.join(PDF_DIR, name.replace(/\.html$/, '.pdf'))); i++) name = `${base}_${i}.html`;

@@ -830,6 +830,56 @@ button.tl-body:hover { background: var(--hover); }
 .menu-sep { height: 1px; margin: 4px 6px; background: var(--line); }
 .folder-empty { padding: 3px 8px 5px 30px; font-size: 12px; color: var(--ink-2); }
 
+
+/* ---------- Sign-in and account ---------- */
+
+.auth {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  background: var(--desk);
+}
+.auth-card {
+  display: grid;
+  gap: 14px;
+  width: min(380px, 100%);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 24px 60px -24px rgba(16, 24, 40, 0.35);
+}
+.auth-card h1 { font-size: 21px; font-weight: 600; letter-spacing: -0.015em; }
+.auth-card p.muted { margin-top: -8px; font-size: 13.5px; }
+.auth-card label { display: grid; gap: 5px; font-size: 13px; color: var(--ink-2); }
+.auth-card input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--rail);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14.5px;
+}
+.auth-card .btn { height: 40px; margin-top: 4px; }
+.auth-error { color: var(--fail); font-size: 13px; }
+
+.account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.account-email { color: var(--ink-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-actions { display: flex; gap: 12px; }
+.account .text-btn { text-decoration: none; font-size: 12.5px; }
+
 /* ---------- Toast ---------- */
 
 .toast {

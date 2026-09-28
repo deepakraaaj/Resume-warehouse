@@ -1,11 +1,10 @@
-# Upload only what the read-only site build needs.
+# Upload only the app. Resumes are stored privately in Vercel Blob, not deployed.
 /*
-!/HTML
-!/PDF
-!/data
+!/api
+!/lib
+!/fonts
 !/dashboard
 !/scripts
 !/package.json
 !/package-lock.json
 !/vercel.json
-!/middleware.js
