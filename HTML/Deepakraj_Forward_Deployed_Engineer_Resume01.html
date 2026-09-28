@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deepakraj B - Forward Deployed Engineer Resume</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 9.25pt;
+    line-height: 1.39;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 100%;
+    padding: 12mm 19mm 10mm 19mm;
+  }
+  
+  /* Header Styling */
+  .header {
+    margin-bottom: 7.5pt;
+    text-align: left;
+  }
+  .name {
+    font-size: 19.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.8pt;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 2.8pt;
+  }
+  .role-title {
+    font-size: 9.35pt;
+    font-weight: 700;
+    color: #0369a1;
+    letter-spacing: 0.5pt;
+    text-transform: uppercase;
+    margin-bottom: 4.8pt;
+  }
+  .contact-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4pt 13pt;
+    font-size: 8.35pt;
+    color: #475569;
+    border-top: 1pt solid #e2e8f0;
+    border-bottom: 1.5pt solid #0369a1;
+    padding: 3.8pt 0;
+  }
+  .contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3.5pt;
+  }
+  .contact-item svg {
+    vertical-align: middle;
+  }
+  .contact-item a {
+    color: #0369a1;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* Section Styling */
+  .section {
+    margin-bottom: 7pt;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    font-size: 9.25pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+    border-bottom: 1.3pt solid #0369a1;
+    padding-bottom: 1.8pt;
+    margin-bottom: 3.8pt;
+  }
+
+  /* Profile Summary - Only Summary is justified per Rule 3 */
+  .profile-text {
+    font-size: 8.75pt;
+    color: #334155;
+    text-align: justify;
+    line-height: 1.36;
+  }
+
+  /* Experience Section */
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2.5pt;
+  }
+  .exp-company {
+    font-weight: 700;
+    font-size: 9.05pt;
+    color: #0f172a;
+  }
+  .exp-role {
+    font-weight: 700;
+    color: #0369a1;
+  }
+  .exp-date {
+    font-size: 8.45pt;
+    font-weight: 700;
+    color: #0369a1;
+  }
+
+  .project-block {
+    margin-top: 3.8pt;
+    margin-bottom: 2.2pt;
+  }
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.8pt;
+    gap: 8pt;
+  }
+  .project-name {
+    font-weight: 700;
+    font-size: 8.75pt;
+    color: #0f172a;
+  }
+  .project-tech {
+    font-weight: 600;
+    font-size: 7.8pt;
+    color: #0369a1;
+    background: #f0f9ff;
+    border: 0.6pt solid #bae6fd;
+    padding: 1pt 5.5pt;
+    border-radius: 3pt;
+    white-space: nowrap;
+  }
+
+  /* Bullet lists stay text-align: left per Rule 3 */
+  ul.bullet-list {
+    list-style-type: none;
+    padding-left: 0;
+    text-align: left;
+  }
+  ul.bullet-list li {
+    position: relative;
+    padding-left: 12pt;
+    margin-bottom: 1.8pt;
+    font-size: 8.5pt;
+    color: #334155;
+    line-height: 1.34;
+    text-align: left;
+  }
+  ul.bullet-list li::before {
+    content: "•";
+    position: absolute;
+    left: 2pt;
+    color: #0369a1;
+    font-weight: bold;
+    font-size: 9pt;
+  }
+  ul.bullet-list li strong {
+    color: #0f172a;
+  }
+
+  /* Technical Skills Layout - Clean 2-Column Grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5pt 18pt;
+    margin-top: 2.5pt;
+  }
+  .skill-row {
+    font-size: 8.45pt;
+    line-height: 1.33;
+    text-align: left;
+  }
+  .skill-label {
+    font-weight: 700;
+    color: #0f172a;
+    display: inline;
+  }
+  .skill-value {
+    color: #334155;
+    display: inline;
+  }
+
+  /* Education Section */
+  .edu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 8.75pt;
+    text-align: left;
+    margin-top: 1pt;
+  }
+  .edu-degree {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .edu-school {
+    color: #475569;
+  }
+  .edu-cgpa {
+    font-weight: 700;
+    color: #0369a1;
+  }
+  .edu-date {
+    color: #475569;
+    font-size: 8.3pt;
+  }
+
+  /* Certifications Layout - 4-item balanced horizontal grid */
+  .cert-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.2pt 18pt;
+    margin-top: 2.5pt;
+    text-align: left;
+  }
+  .cert-item {
+    font-size: 8.45pt;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 5pt;
+    text-align: left;
+  }
+  .cert-item::before {
+    content: "•";
+    color: #0369a1;
+    font-weight: bold;
+    font-size: 9pt;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Header -->
+  <div class="header">
+    <div class="name">DEEPAKRAJ B</div>
+    <div class="role-title">FORWARD DEPLOYED ENGINEER | AI INTEGRATIONS, BACKEND (PYTHON / JAVA) & CLOUD</div>
+    <div class="contact-bar">
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <a href="mailto:deepakrajbm@zohomail.in">deepakrajbm@zohomail.in</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        +91 95007 56675
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Chennai, Tamil Nadu, India
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <a href="https://deepakrajb.vercel.app/">Portfolio</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="#0369a1"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <a href="https://github.com/deepakraaaj/">GitHub</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="#0369a1"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        <a href="https://www.linkedin.com/in/deepakrajbm/">LinkedIn</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div class="section">
+    <div class="section-header">PROFILE</div>
+    <div class="profile-text">
+      Forward-deployed Integration and Backend Software Engineer with hands-on experience delivering production client integrations, on-site defense deployments, AI/LLM orchestration pipelines, and scalable APIs across Python and Java. Proven track record deploying on-site at client facilities under strict operational constraints to autonomously build and deliver end-to-end full-stack and IoT systems. Skilled in <strong>RESTful APIs, WebSockets, webhooks</strong>, and integrating LLM workflows using <strong>LangChain, LangGraph, and OpenAI SDKs</strong> with cloud infrastructure on <strong>AWS & GCP</strong>. Experienced in Docker containerization, <strong>OAuth2 / JWT</strong> security, and client-facing system delivery.
+    </div>
+  </div>
+
+  <!-- Professional Experience -->
+  <div class="section">
+    <div class="section-header">PROFESSIONAL EXPERIENCE</div>
+    
+    <div class="exp-header">
+      <span class="exp-company"><span class="exp-role">Software Engineer</span> | Kritilabs Technologies Pvt. Ltd., Chennai, India</span>
+      <span class="exp-date">July 2024 - Present</span>
+    </div>
+
+    <!-- Project 1: Army Camp / Sentinel Kote -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">Sentinel Kote - Offline RFID Weapon Tracking System (Indian Army)</span>
+        <span class="project-tech">Java, Android, React, RFID Hardware, Offline Systems</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Forward-deployed on-site at an <strong>Indian Army camp</strong>, gathering operational requirements directly from soldiers to replace error-prone manual ledger workflows.</li>
+        <li>Architected and delivered the complete <strong>offline RFID weapon inventory platform</strong> (Android app, React UI, and Java backend) solo within 2 weeks.</li>
+        <li>Integrated hardware RFID scanners with offline-first synchronization; built the React inventory dashboard and Android touch UI with instant scan feedback, cutting audit time by <strong>85%</strong>.</li>
+      </ul>
+    </div>
+
+    <!-- Project 2: AI Query Engine -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">AI Integration & Natural Language Query Platform</span>
+        <span class="project-tech">Python, FastAPI, LangGraph, LangChain, OpenAI APIs, Docker, AWS</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Built and deployed an enterprise <strong>NL2SQL integration engine</strong> using <strong>Python, LangGraph, and FastAPI</strong>, enabling natural-language querying across multi-table SQL databases.</li>
+        <li>Implemented tool-calling orchestration with schema metadata retrieval (<strong>ChromaDB</strong>), multi-step validation, and prompt design to ensure high query execution accuracy.</li>
+        <li>Containerized Python services via <strong>Docker</strong> and established automated <strong>CI/CD deployment pipelines</strong> on <strong>AWS (EC2, S3)</strong> for repeatable, zero-downtime releases.</li>
+      </ul>
+    </div>
+
+    <!-- Project 3: ERP Integration -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">Enterprise Client Systems Integration & Platform Rollout</span>
+        <span class="project-tech">Python, Frappe, REST APIs, Webhooks, MySQL, Postman</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Led platform integration across 4 manufacturing units (700+ users), syncing production planning, inventory, and QA systems.</li>
+        <li>Developed <strong>REST API integrations and webhook receivers</strong> connecting legacy ERP, inventory databases, and Android barcode scanners with Frappe backend APIs, cutting manual data entry by <strong>80%</strong>.</li>
+        <li>Optimized <strong>MySQL & PostgreSQL</strong> database schemas, query indexes, and API endpoints, improving throughput by <strong>30%</strong>.</li>
+      </ul>
+    </div>
+
+    <!-- Project 4: Fleet Telemetry -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">Real-Time Client Telemetry & Microservices Integration</span>
+        <span class="project-tech">Java, Spring Boot, WebSockets, REST APIs, Redis, JWT</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Engineered real-time telemetry ingestion pipelines and microservices for live vehicle fleet tracking and smart lock monitoring for <strong>IOCL and BPCL</strong>.</li>
+        <li>Implemented secure authentication with <strong>JWT and OAuth2</strong> dynamic RBAC, and deployed backend analytics for <strong>Indian Railways</strong>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Technical Skills - Clean 2-Column Grid -->
+  <div class="section">
+    <div class="section-header">TECHNICAL SKILLS</div>
+    <div class="skills-grid">
+      <div class="skill-row">
+        <div class="skill-label">Programming Languages:</div>
+        <div class="skill-value">Python (FastAPI, Django, Flask), Java (Spring Boot), SQL, JavaScript</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Integrations & Protocols:</div>
+        <div class="skill-value">RESTful APIs, WebSockets, Webhooks, OAuth2, JWT, IoT Gateways</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">AI & LLM Orchestration:</div>
+        <div class="skill-value">LangChain, LangGraph, OpenAI APIs, Prompt Design, NL2SQL, ChromaDB</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Cloud & DevOps:</div>
+        <div class="skill-value">AWS (EC2, S3), GCP, Docker, CI/CD Pipelines, Linux, Nginx</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Databases & Caching:</div>
+        <div class="skill-value">PostgreSQL, MySQL, Redis, SQLAlchemy, Query Optimization</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Testing & Observability:</div>
+        <div class="skill-value">Postman, Pytest, JUnit 5, Swagger/OpenAPI, Git, JIRA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Education -->
+  <div class="section">
+    <div class="section-header">EDUCATION</div>
+    <div class="edu-row">
+      <div>
+        <span class="edu-degree">B.Tech in Computer Science & Engineering</span>
+        <span class="edu-school"> | SASTRA Deemed University, Thanjavur, Tamil Nadu</span>
+      </div>
+      <div>
+        <span class="edu-cgpa">CGPA: 7.2955</span> | <span class="edu-date">2020 - 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Certifications -->
+  <div class="section" style="margin-bottom: 0;">
+    <div class="section-header">CERTIFICATIONS</div>
+    <div class="cert-grid">
+      <div class="cert-item">Python Crash Course - Google</div>
+      <div class="cert-item">Machine Learning Specialization</div>
+      <div class="cert-item">Software Engineering Specialization - IBM</div>
+      <div class="cert-item">Backend Development Specialization - Meta</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

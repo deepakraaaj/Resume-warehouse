@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deepakraj B - Backend Software Engineer Resume</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 8.85pt;
+    line-height: 1.32;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 100%;
+    padding: 12.5mm 18mm 11mm 18mm;
+  }
+  
+  /* Header Styling */
+  .header {
+    margin-bottom: 6pt;
+  }
+  .name {
+    font-size: 19.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.8pt;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 2.5pt;
+  }
+  .role-title {
+    font-size: 9.2pt;
+    font-weight: 700;
+    color: #1f4e79;
+    letter-spacing: 0.5pt;
+    text-transform: uppercase;
+    margin-bottom: 4pt;
+  }
+  .contact-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3.5pt 13pt;
+    font-size: 8.25pt;
+    color: #475569;
+    border-bottom: 1.5pt solid #1f4e79;
+    padding-bottom: 3.5pt;
+  }
+  .contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3.5pt;
+  }
+  .contact-item svg {
+    vertical-align: middle;
+  }
+  .contact-item a {
+    color: #1f4e79;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* Section Styling */
+  .section {
+    margin-bottom: 6.2pt;
+  }
+  .section-header {
+    font-size: 9.1pt;
+    font-weight: 800;
+    color: #1f4e79;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+    border-bottom: 1.2pt solid #cbd5e1;
+    padding-bottom: 1.8pt;
+    margin-bottom: 3.2pt;
+  }
+
+  /* Profile Summary - Only Summary is justified per Rule 3 */
+  .profile-text {
+    font-size: 8.6pt;
+    color: #334155;
+    text-align: justify;
+    line-height: 1.35;
+  }
+
+  /* Experience Section */
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2.2pt;
+  }
+  .exp-company {
+    font-weight: 700;
+    font-size: 9.0pt;
+    color: #0f172a;
+  }
+  .exp-role {
+    font-weight: 700;
+    color: #1f4e79;
+  }
+  .exp-date {
+    font-size: 8.35pt;
+    font-weight: 700;
+    color: #1f4e79;
+    white-space: nowrap;
+  }
+
+  .project-block {
+    margin-top: 4pt;
+    margin-bottom: 2pt;
+  }
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.6pt;
+    gap: 8pt;
+  }
+  .project-name {
+    font-weight: 700;
+    font-size: 8.6pt;
+    color: #0f172a;
+    flex-shrink: 0;
+  }
+  .project-tech {
+    font-weight: 600;
+    font-size: 7.75pt;
+    color: #1f4e79;
+    text-align: right;
+    letter-spacing: 0.1pt;
+  }
+
+  /* Bullet lists stay text-align: left per Rule 3 */
+  ul.bullet-list {
+    list-style-type: none;
+    padding-left: 0;
+    text-align: left;
+  }
+  ul.bullet-list li {
+    position: relative;
+    padding-left: 11pt;
+    margin-bottom: 2.0pt;
+    font-size: 8.5pt;
+    color: #334155;
+    line-height: 1.35;
+    text-align: left;
+  }
+  ul.bullet-list li::before {
+    content: "•";
+    position: absolute;
+    left: 2pt;
+    color: #1f4e79;
+    font-weight: bold;
+    font-size: 8.6pt;
+  }
+  ul.bullet-list li strong {
+    color: #0f172a;
+  }
+
+  /* Technical Skills Layout - Clean 2-Column Grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.2pt 16pt;
+    margin-top: 2pt;
+  }
+  .skill-row {
+    font-size: 8.35pt;
+    line-height: 1.28;
+    text-align: left;
+  }
+  .skill-label {
+    font-weight: 700;
+    color: #0f172a;
+    display: inline;
+  }
+  .skill-value {
+    color: #334155;
+    display: inline;
+  }
+
+  /* Education & Certifications Layout */
+  .edu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 8.7pt;
+    text-align: left;
+  }
+  .edu-degree {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .edu-school {
+    color: #475569;
+  }
+  .edu-cgpa {
+    font-weight: 700;
+    color: #1f4e79;
+  }
+  .edu-date {
+    color: #475569;
+    font-size: 8.3pt;
+  }
+
+  .cert-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5pt 14pt;
+    margin-top: 2.2pt;
+    text-align: left;
+  }
+  .cert-item {
+    font-size: 8.45pt;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 4.5pt;
+    text-align: left;
+  }
+  .cert-item::before {
+    content: "•";
+    color: #1f4e79;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Header -->
+  <div class="header">
+    <div class="name">DEEPAKRAJ B</div>
+    <div class="role-title">BACKEND SOFTWARE ENGINEER | JAVA, KOTLIN, SPRING BOOT & AWS</div>
+    <div class="contact-bar">
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f4e79" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <a href="mailto:deepakrajbm@zohomail.in">deepakrajbm@zohomail.in</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f4e79" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        +91 95007 56675
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f4e79" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Chennai, Tamil Nadu, India
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f4e79" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <a href="https://deepakrajb.vercel.app/">Portfolio</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="#1f4e79"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <a href="https://github.com/deepakraaaj/">GitHub</a>
+      </span>
+      <span class="contact-item">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="#1f4e79"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        <a href="https://www.linkedin.com/in/deepakrajbm/">LinkedIn</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div class="section">
+    <div class="section-header">PROFILE</div>
+    <div class="profile-text">
+      Backend Software Engineer with hands-on experience in a product-based company environment, building scalable event-driven microservices, real-time telemetry streaming pipelines, and enterprise platform integrations. Proven track record taking complex operational requirements - from on-site field constraints at an Army camp to large-scale commercial fleet telemetry for IOCL - and translating them into reliable, high-throughput production systems. Focused on robust data consistency, clean architectural boundaries, and pragmatic engineering that keeps mission-critical platforms dependable under real-world loads.
+    </div>
+  </div>
+
+  <!-- Professional Experience -->
+  <div class="section">
+    <div class="section-header">PROFESSIONAL EXPERIENCE</div>
+    
+    <div class="exp-header">
+      <span class="exp-company"><span class="exp-role">Software Engineer</span> | Kritilabs Technologies Limited, Chennai, India</span>
+      <span class="exp-date">July 2024 - Present</span>
+    </div>
+
+    <!-- Project 1: IOCL JRM Platform (Realtime Project) -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">IOCL Journey Risk Management (JRM) Platform</span>
+        <span class="project-tech">Python, Java 21, Spring Boot, Kafka, PostgreSQL, Uber H3, Valhalla</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Architecting the spatial map-matching and telemetry risk-scoring pipeline for IOCL's Journey Risk Management platform, targeting <strong>150,000+ commercial transit routes</strong>.</li>
+        <li>Built a modular Python processing pipeline (<strong>GPS fix-quality filtering, H3 hexagonal indexing, Valhalla map-matching</strong>) to classify routes into Red/Yellow/Green exposure zones, recorded as <strong>ADRs</strong>.</li>
+        <li>Reconciled live telemetry event schemas to surface and resolve a <strong>1000x data discrepancy</strong>, designing cross-service event contracts with <strong>Java 21 / Spring Boot & PostgreSQL</strong> for automated operational alerts.</li>
+      </ul>
+    </div>
+
+    <!-- Project 2: Enterprise Spring Boot Microservices -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">Event-Driven Microservices & Cloud Platform</span>
+        <span class="project-tech">Java, Spring Boot 3.x, Spring Cloud, Kafka, Spring Data, PostgreSQL, AWS</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Architected event-driven microservices decomposing monoliths using <strong>Java, Spring Boot 3.x, and Spring Cloud</strong> (Config Server, Eureka, Gateway) with <strong>Apache Kafka</strong> for async inter-service streaming.</li>
+        <li>Enforced transactional <strong>data consistency and exactly-once processing (EOS)</strong> across consumer groups, boosting query throughput by <strong>35%</strong> with composite indexing and query tuning on <strong>PostgreSQL & MySQL</strong>.</li>
+        <li>Hardened API gateways with dynamic <strong>RBAC via Spring Security & JWT</strong>, integrated <strong>Resilience4j</strong> circuit breakers, and automated database migrations with <strong>Flyway</strong> and <strong>Terraform</strong> on <strong>AWS EKS</strong>.</li>
+      </ul>
+    </div>
+
+    <!-- Project 3: SentinelKote (Indian Army) -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">SentinelKote - Field Asset Tracking & Offline Sync</span>
+        <span class="project-tech">Java, Spring Boot, REST APIs, Android, Offline Sync, RFID Hardware</span>
+      </div>
+      <ul class="bullet-list">
+        <li>Deployed on-site at an <strong>Indian Army camp</strong> to architect and deliver an offline-first inventory tracking system, replacing manual paper ledger audits with hardware RFID verification within <strong>2 weeks</strong>.</li>
+        <li>Engineered offline synchronization protocols and deterministic conflict-resolution logic, guaranteeing transactional data consistency and zero ledger discrepancies upon network reconnection.</li>
+        <li>Built modular Java backend REST services with strict validation boundaries, audit trail logging, and low-latency local storage, ensuring sub-second response times under constrained field conditions.</li>
+      </ul>
+    </div>
+
+    <!-- Project 4: Applied LLM & SDLC Automation Systems -->
+    <div class="project-block">
+      <div class="project-header">
+        <span class="project-name">Applied AI & SDLC Automation Systems</span>
+        <span class="project-tech">FastAPI, LangGraph, SQLGlot, LangChain, Pydantic, Bitbucket, Redis</span>
+      </div>
+      <ul class="bullet-list">
+        <li><strong>NL2SQL Reasoning Engine:</strong> Built an <strong>NL2SQL engine</strong> (LangGraph, FastAPI, SQLGlot guardrails) reducing query latency by <strong>35%</strong> with Redis caching, and automated PRD parsing to Redmine backlogs via <strong>LangChain & Pydantic</strong>.</li>
+        <li><strong>Automated PR Review Pipeline:</strong> Engineered an automated code review engine triggered in <strong>Bitbucket Pipelines</strong>, parsing git diffs and AST changes via <strong>Python & LLM APIs</strong> with Pydantic validation to enforce architectural rules before merge.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Technical Skills - Clean 2-Column Grid -->
+  <div class="section">
+    <div class="section-header">TECHNICAL SKILLS</div>
+    <div class="skills-grid">
+      <div class="skill-row">
+        <div class="skill-label">JVM & Backend:</div>
+        <div class="skill-value">Java (11/17/21), Kotlin, Spring Boot 3.x, Spring Cloud, Spring Data JPA/JDBC</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Streaming & Messaging:</div>
+        <div class="skill-value">Apache Kafka, Kafka Streams, Avro Schemas, Exactly-Once Processing (EOS)</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Databases & Spatial:</div>
+        <div class="skill-value">PostgreSQL, MySQL, Redis Caching, Flyway Migrations</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Spatial & Telemetry:</div>
+        <div class="skill-value">Uber H3 Grid Indexing, Valhalla Map-Matching, Telemetry Pipelines, ADRs</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Cloud Infrastructure:</div>
+        <div class="skill-value">AWS (EKS, RDS, VPC, S3), Serverless, Terraform, Kubernetes, Docker</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">CI/CD & DevOps:</div>
+        <div class="skill-value">Bitbucket Pipelines, Docker, Docker Compose, Linux, Shell / Bash</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">APIs & Security:</div>
+        <div class="skill-value">RESTful APIs, Spring Security, JWT, Dynamic RBAC, Resilience4j (Circuit Breaker)</div>
+      </div>
+      <div class="skill-row">
+        <div class="skill-label">Testing & AI Tooling:</div>
+        <div class="skill-value">JUnit 5, Mockito, Testcontainers, Swagger / OpenAPI, LangGraph, SQLGlot, Pytest</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Education -->
+  <div class="section">
+    <div class="section-header">EDUCATION</div>
+    <div class="edu-row">
+      <div>
+        <span class="edu-degree">B.Tech in Computer Science & Engineering</span>
+        <span class="edu-school"> | SASTRA Deemed University, Thanjavur, India</span>
+      </div>
+      <div style="white-space: nowrap;">
+        <span class="edu-cgpa">CGPA: 7.30</span> | <span class="edu-date">2020 - 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Certifications -->
+  <div class="section">
+    <div class="section-header">CERTIFICATIONS & TRAINING</div>
+    <div class="cert-grid">
+      <div class="cert-item">Backend Development Specialization - Meta</div>
+      <div class="cert-item">Software Engineering Specialization - IBM</div>
+      <div class="cert-item">Cloud Computing & System Architecture - Coursera</div>
+      <div class="cert-item">Python Crash Course - Google</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
