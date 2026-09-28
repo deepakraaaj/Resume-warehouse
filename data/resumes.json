@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T09:46:40.789Z",
+  "generatedAt": "2026-09-28T09:56:15.882Z",
   "repository": "deepakraaaj/Resume-warehouse",
   "branch": "main",
   "resumes": [
@@ -14,14 +14,14 @@
         "pages": 1,
         "left_margin": 51.02,
         "right_margin": 50.48,
-        "margin_delta": 0.55,
+        "margin_delta": 0.54,
         "content_bottom": 796.89,
         "page_height": 841.92,
         "trailing_space": 45.03,
         "status": "PASS"
       },
       "fileSize": 16103,
-      "updatedAt": "2026-09-28T08:09:32.844Z",
+      "updatedAt": "2026-09-28T09:55:58.470Z",
       "metadata": {
         "title": "Deepakraj B - Full Stack Engineer Resume",
         "roleTitle": "FULL STACK ENGINEER | REACT, TYPESCRIPT, PYTHON, JAVA & CLOUD",

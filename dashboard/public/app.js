@@ -1262,7 +1262,20 @@ function setupEventListeners() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
-  loadResumes();
+  loadResumes().then(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const resumeParam = params.get('resume');
+
+    if (resumeParam) {
+      const match = state.resumes.find(r => r.filename.includes(resumeParam));
+      if (match) selectResume(match);
+    }
+
+    if (mode) {
+      setViewMode(mode);
+    }
+  });
   loadGitStatus();
   applyZoom(100);
 });
