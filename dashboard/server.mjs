@@ -1,236 +1,25 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { exec, execFile } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
+import {
+  ROOT, HTML_DIR, PDF_DIR, listSources, resolveSource, pdfNameFor,
+  compilePdf, measurePdf, measureDraft, extractPdfText, describe, readManifest, writeManifest,
+  setCompany, setMeta, setRole, newSourceName,
+  readFolders, writeFolders, cleanName, cleanFileName, archiveResume, readMeta,
+} from '../scripts/resume-lib.mjs';
 
-const execAsync = promisify(exec);
-const execFileAsync = promisify(execFile);
+const run = promisify(execFile);
+const HOST = '127.0.0.1';
+const PORT = Number(process.env.PORT) || 4000;
+const PUBLIC_DIR = path.join(ROOT, 'dashboard', 'public');
+const MAX_BODY = 2 * 1024 * 1024;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const WORKSPACE_ROOT = path.resolve(__dirname, '..');
-const HTML_DIR = path.join(WORKSPACE_ROOT, 'HTML');
-const PDF_DIR = path.join(WORKSPACE_ROOT, 'PDF');
-const PUBLIC_DIR = path.join(__dirname, 'public');
-
-const PORT = process.env.PORT || 4000;
-
-// Mapping of HTML templates to target PDF files
-const PDF_MAPPINGS = {
-  'Deepakraj_Full_Stack_Engineer_Resume.html': 'Deepakraj_Full_Stack_Engineer_Resume.pdf',
-  'Deepakraj_Forward_Deployed_Engineer_Resume01.html': 'Deepakraj_FDE.pdf',
-  'Deepakraj_Forward_Deployed_Engineer_Resume.html': 'Deepakraj_Forward_Deployed_Engineer_Resume.pdf',
-  'Deepakraj_Python_Developer_Resume.html': 'Deepakraj_Python_Developer_Resume.pdf',
-  'Deepakraj_Kotlin_Backend_Engineer_Resume.html': 'Deepakraj_Kotlin_Backend_Engineer_Resume.pdf',
-  'Deepakraj_GENAI_Software_Engineer_Resume.html': 'Deepakraj_GENAI_Software_Engineer_Resume.pdf',
-  'Deepakraj_ERPNext_Developer_Resume.html': 'Deepakraj_B_Resume_ERPNext.pdf',
-  'Deepakraj_Junior_Software_Engineer_Resume.html': 'Deepakraj_Junior_Software_Engineer_Resume.pdf',
-};
-
-// Friendly role labels & tags
-function extractMetadata(htmlContent, filename) {
-  const titleMatch = htmlContent.match(/<title>([^<]+)<\/title>/i);
-  const roleMatch = htmlContent.match(/<div class="role-title">([^<]+)<\/div>/i);
-  
-  let role = roleMatch ? roleMatch[1].trim() : (titleMatch ? titleMatch[1].replace(' - Resume', '') : filename);
-  
-  // Extract tech chips from project-tech spans
-  const techMatches = [...htmlContent.matchAll(/<span class="project-tech">([^<]+)<\/span>/g)].map(m => m[1]);
-  const allTechs = new Set();
-  techMatches.forEach(t => {
-    t.split(',').forEach(item => {
-      const clean = item.trim();
-      if (clean && clean.length < 24) allTechs.add(clean);
-    });
-  });
-
-  // Category classifier
-  let category = 'Other';
-  const lowerRole = role.toLowerCase();
-  if (lowerRole.includes('full stack')) category = 'Full Stack';
-  else if (lowerRole.includes('forward deployed')) category = 'Forward Deployed';
-  else if (lowerRole.includes('python')) category = 'Python & AI';
-  else if (lowerRole.includes('kotlin') || lowerRole.includes('backend')) category = 'Backend';
-  else if (lowerRole.includes('genai') || lowerRole.includes('ai')) category = 'GenAI';
-  else if (lowerRole.includes('erpnext') || lowerRole.includes('frappe')) category = 'ERP / Enterprise';
-  else if (lowerRole.includes('junior')) category = 'Software Engineer';
-
-  return {
-    title: titleMatch ? titleMatch[1].trim() : filename,
-    roleTitle: role,
-    category,
-    techBadges: Array.from(allTechs).slice(0, 8),
-  };
-}
-
-const metricsCache = new Map();
-
-async function getPdfMetrics(pdfPath) {
-  if (!fs.existsSync(pdfPath)) return null;
-  const mtime = fs.statSync(pdfPath).mtimeMs;
-  if (metricsCache.has(pdfPath)) {
-    const cached = metricsCache.get(pdfPath);
-    if (cached.mtime === mtime) {
-      return cached.data;
-    }
-  }
-
-  const script = `
-import pdfplumber, json
-with pdfplumber.open('${pdfPath}') as pdf:
-    pages = len(pdf.pages)
-    if pages == 0:
-        print(json.dumps({'pages': 0}))
-        exit()
-    page = pdf.pages[0]
-    words = page.extract_words()
-    left = min(w['x0'] for w in words) if words else 0
-    right = page.width - max(w['x1'] for w in words) if words else 0
-    bottom = max(w['bottom'] for w in words) if words else 0
-    trailing = page.height - bottom if words else 0
-    print(json.dumps({
-        'pages': pages,
-        'left_margin': round(left, 2),
-        'right_margin': round(right, 2),
-        'margin_delta': round(abs(left - right), 2),
-        'content_bottom': round(bottom, 2),
-        'page_height': round(page.height, 2),
-        'trailing_space': round(trailing, 2),
-        'status': 'PASS' if pages == 1 and abs(left - right) < 2.5 else 'WARN'
-    }))
-`;
-  try {
-    const { stdout } = await execAsync(`python3 -c "${script.replace(/"/g, '\\"')}"`);
-    const data = JSON.parse(stdout.trim());
-    metricsCache.set(pdfPath, { mtime, data });
-    return data;
-  } catch (err) {
-    return { error: err.message };
-  }
-}
-
-async function getGitInfoForFile(filePath) {
-  try {
-    const relPath = path.relative(WORKSPACE_ROOT, filePath);
-    const { stdout: logOut } = await execAsync(`git log -n 1 --pretty=format:"%h|%s|%ar|%an" -- "${relPath}"`, { cwd: WORKSPACE_ROOT });
-    const { stdout: statusOut } = await execAsync(`git status --porcelain -- "${relPath}"`, { cwd: WORKSPACE_ROOT });
-    
-    let lastCommit = null;
-    if (logOut) {
-      const [hash, subject, timeAgo, author] = logOut.split('|');
-      lastCommit = { hash, subject, timeAgo, author };
-    }
-    
-    const isModified = statusOut.trim().length > 0;
-    const statusCode = isModified ? statusOut.trim().slice(0, 2) : 'clean';
-
-    return { lastCommit, isModified, statusCode };
-  } catch {
-    return { lastCommit: null, isModified: false, statusCode: 'clean' };
-  }
-}
-
-async function listAllResumes() {
-  if (!fs.existsSync(HTML_DIR)) return [];
-  const files = fs.readdirSync(HTML_DIR).filter(f => f.endsWith('.html'));
-
-  const resumes = [];
-  for (const filename of files) {
-    const htmlPath = path.join(HTML_DIR, filename);
-    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
-    const stats = fs.statSync(htmlPath);
-    const metadata = extractMetadata(htmlContent, filename);
-
-    const pdfName = PDF_MAPPINGS[filename] || filename.replace('.html', '.pdf');
-    const pdfPath = path.join(PDF_DIR, pdfName);
-    const pdfExists = fs.existsSync(pdfPath);
-    const pdfStats = pdfExists ? fs.statSync(pdfPath) : null;
-    const pdfMetrics = pdfExists ? await getPdfMetrics(pdfPath) : null;
-    const gitInfo = await getGitInfoForFile(htmlPath);
-
-    resumes.push({
-      id: filename.replace('.html', ''),
-      filename,
-      htmlUrl: `/HTML/${filename}`,
-      pdfName,
-      pdfUrl: pdfExists ? `/PDF/${pdfName}` : null,
-      pdfExists,
-      pdfMetrics,
-      fileSize: stats.size,
-      updatedAt: stats.mtime,
-      isOutOfSync: pdfExists ? stats.mtime > pdfStats.mtime : true,
-      metadata,
-      gitInfo,
-    });
-  }
-
-  // Sort by priority (Full Stack & FDE first)
-  resumes.sort((a, b) => {
-    if (a.filename.includes('Full_Stack')) return -1;
-    if (b.filename.includes('Full_Stack')) return 1;
-    return b.updatedAt - a.updatedAt;
-  });
-
-  return resumes;
-}
-
-async function compileResume(filename) {
-  const htmlPath = path.join(HTML_DIR, filename);
-  if (!fs.existsSync(htmlPath)) throw new Error(`HTML file not found: ${filename}`);
-
-  const pdfName = PDF_MAPPINGS[filename] || filename.replace('.html', '.pdf');
-  const pdfPath = path.join(PDF_DIR, pdfName);
-
-  const cmd = `google-chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${pdfPath}" "file://${htmlPath}"`;
-  await execAsync(cmd);
-
-  // If Full Stack, also copy/sync DeepakrajB_Full_STACK.pdf
-  if (filename === 'Deepakraj_Full_Stack_Engineer_Resume.html') {
-    const altPdf = path.join(PDF_DIR, 'DeepakrajB_Full_STACK.pdf');
-    await execAsync(`cp "${pdfPath}" "${altPdf}"`).catch(() => {});
-  }
-
-  const metrics = await getPdfMetrics(pdfPath);
-  return { pdfName, metrics };
-}
-
-async function getGitWorkspaceStatus() {
-  const { stdout: branchOut } = await execAsync('git branch --show-current', { cwd: WORKSPACE_ROOT });
-  const { stdout: statusOut } = await execAsync('git status --porcelain', { cwd: WORKSPACE_ROOT });
-  const { stdout: logOut } = await execAsync('git log -n 5 --pretty=format:"%h%x09%s%x09%ar%x09%an"', { cwd: WORKSPACE_ROOT });
-
-  const dirtyFiles = statusOut
-    .split('\n')
-    .filter(Boolean)
-    .map(line => {
-      const code = line.slice(0, 2);
-      const file = line.slice(3);
-      return { code, file };
-    });
-
-  const commits = logOut
-    .split('\n')
-    .filter(Boolean)
-    .map(line => {
-      const [hash, subject, timeAgo, author] = line.split('\t');
-      return { hash, subject, timeAgo, author };
-    });
-
-  return {
-    branch: branchOut.trim(),
-    isDirty: dirtyFiles.length > 0,
-    dirtyFiles,
-    commits,
-  };
-}
-
-const MIME_TYPES = {
+const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.mjs': 'application/javascript; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.pdf': 'application/pdf',
   '.svg': 'image/svg+xml',
@@ -238,261 +27,268 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
-function validateResumeRules(html) {
-  const violations = [];
-
-  // Rule 1: No long dashes
-  if (/[\u2013\u2014]/.test(html)) {
-    violations.push({
-      rule: 'No Long Dashes',
-      message: 'Found en-dash (–) or em-dash (—). Use standard hyphens (-) per .agents/AGENTS.md.',
-      severity: 'error'
-    });
-  }
-
-  // Rule 2: No Emojis
-  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
-  if (emojiRegex.test(html)) {
-    violations.push({
-      rule: 'No Emojis',
-      message: 'Found emojis. Use clean professional text labels and SVG icons.',
-      severity: 'error'
-    });
-  }
-
-  // Rule 3: No AI Buzzwords
-  const buzzwords = [
-    'agentic', 'groundbreaking', 'seamlessly', 'spearheaded',
-    'game-changer', 'synergy', 'paradigm', 'transformative'
-  ];
-  for (const bw of buzzwords) {
-    const reg = new RegExp(`\\b${bw}\\b`, 'i');
-    if (reg.test(html)) {
-      violations.push({
-        rule: 'No AI Buzzwords',
-        message: `Found banned buzzword "${bw}". Highlight practical, measurable outcomes instead.`,
-        severity: 'warning'
-      });
+// pdf path -> { mtimeMs, metrics }; seeded from the manifest so startup doesn't re-measure unchanged PDFs.
+const metricsCache = new Map();
+{
+  const manifest = readManifest();
+  const builtAt = Date.parse(manifest.generatedAt ?? 0);
+  for (const r of manifest.resumes) {
+    const pdfPath = path.join(PDF_DIR, r.pdf);
+    if (r.metrics && fs.existsSync(pdfPath) && fs.statSync(pdfPath).mtimeMs <= builtAt) {
+      metricsCache.set(pdfPath, { mtimeMs: fs.statSync(pdfPath).mtimeMs, metrics: r.metrics });
     }
   }
+}
 
-  // Rule 4: Never hardcode width: 210mm
-  if (/\.page\s*\{[^}]*width\s*:\s*210mm/i.test(html)) {
-    violations.push({
-      rule: 'Page Setup Rule',
-      message: 'Never hardcode "width: 210mm" in .page. Use "width: 100%" with padding.',
-      severity: 'error'
-    });
+async function metricsFor(file) {
+  const pdfPath = path.join(PDF_DIR, pdfNameFor(file));
+  if (!fs.existsSync(pdfPath)) return null;
+  const { mtimeMs } = fs.statSync(pdfPath);
+  const hit = metricsCache.get(pdfPath);
+  if (hit && hit.mtimeMs === mtimeMs) return hit.metrics;
+  const metrics = await measurePdf(pdfPath);
+  metricsCache.set(pdfPath, { mtimeMs, metrics });
+  return metrics;
+}
+
+async function uncommitted() {
+  try {
+    const { stdout } = await run('git', ['status', '--porcelain', '-z', '--', 'HTML', 'PDF', 'data'], { cwd: ROOT });
+    return stdout.split('\0').filter(entry => entry.length > 3).map(entry => entry.slice(3));
+  } catch {
+    return [];
   }
+}
 
-  return violations;
+async function snapshot() {
+  const changes = await uncommitted();
+  const resumes = [];
+  for (const file of listSources()) {
+    const record = describe(file, await metricsFor(file));
+    const htmlTime = Date.parse(record.updatedAt);
+    record.stale = !record.pdfExists || htmlTime - Date.parse(record.pdfUpdatedAt) > 1000;
+    record.changed = changes.includes(`HTML/${file}`) || changes.includes(`PDF/${record.pdf}`);
+    resumes.push(record);
+  }
+  return { mode: 'local', resumes, changes, folders: readFolders() };
+}
+
+async function rebuild(files) {
+  for (const file of files) await compilePdf(file);
+  const state = await snapshot();
+  writeManifest(state.resumes);
+  return snapshot();
+}
+
+function readJson(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > MAX_BODY) {
+        reject(new Error('Request is too large.'));
+        req.destroy();
+      } else chunks.push(chunk);
+    });
+    req.on('end', () => {
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); }
+      catch { reject(new Error('Request body is not valid JSON.')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+function send(res, status, body) {
+  res.writeHead(status, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store' });
+  res.end(JSON.stringify(body));
+}
+
+// Blocks other websites from driving this server through the browser: JSON forces a CORS preflight we never answer.
+function isSameOriginJson(req) {
+  const origin = req.headers.origin;
+  const jsonBody = (req.headers['content-type'] ?? '').startsWith('application/json');
+  return jsonBody && (!origin || origin === `http://${req.headers.host}`);
+}
+
+const routes = {
+  'GET /api/state': async () => snapshot(),
+
+  'GET /api/history': async (_, query) => {
+    const file = resolveSource(query.get('file'));
+    const { stdout } = await run('git', ['log', '-n', '40', '--format=%h%x1f%an%x1f%aI%x1f%s', '--', `HTML/${file}`], { cwd: ROOT });
+    const commits = stdout.split('\n').filter(Boolean).map(line => {
+      const [hash, author, date, subject] = line.split('\x1f');
+      return { hash, author, date, subject };
+    });
+    const changed = (await uncommitted()).includes(`HTML/${file}`);
+    return { commits, changed };
+  },
+
+  'GET /api/version': async (_, query) => {
+    const file = resolveSource(query.get('file'));
+    const commit = String(query.get('commit') ?? '');
+    if (!/^[0-9a-f]{7,40}$/.test(commit)) throw new Error('That is not a commit id.');
+    const { stdout } = await run('git', ['show', `${commit}:HTML/${file}`], { cwd: ROOT, maxBuffer: 8 * 1024 * 1024 });
+    return { html: stdout };
+  },
+
+  'GET /api/ats': async (_, query) => {
+    const file = resolveSource(query.get('file'));
+    const result = await extractPdfText(path.join(PDF_DIR, pdfNameFor(file)));
+    if (!result) throw new Error('This resume has no PDF yet. Build it first.');
+    return result;
+  },
+
+  // New and duplicate are the same action: copy a source resume, then set its role and company.
+  'POST /api/create': async ({ from, role, company, group }) => {
+    const source = resolveSource(from);
+    const title = String(role ?? '').trim();
+    if (title.length < 2 || title.length > 80) throw new Error('Give the role a name between 2 and 80 characters.');
+    let html = fs.readFileSync(path.join(HTML_DIR, source), 'utf8');
+    html = setCompany(setRole(html, title), company);
+    if (group) html = setMeta(html, 'group', cleanName(group, 'folder'));
+    const file = newSourceName(title, company);
+    fs.writeFileSync(path.join(HTML_DIR, file), html, 'utf8');
+    return { ...(await rebuild([file])), created: file };
+  },
+
+  'POST /api/folder': async ({ action, name, to }) => {
+    const folders = readFolders();
+    const from = cleanName(name, 'folder');
+    const members = listSources().filter(f => describe(f, null).group === from);
+    if (action === 'create') {
+      writeFolders([...folders, from]);
+    } else if (action === 'rename') {
+      const target = cleanName(to, 'folder');
+      for (const f of members) {
+        const p = path.join(HTML_DIR, f);
+        fs.writeFileSync(p, setMeta(fs.readFileSync(p, 'utf8'), 'group', target), 'utf8');
+      }
+      writeFolders(folders.map(f => (f === from ? target : f)).filter(f => f !== from || members.length === 0));
+      if (members.length) return rebuild(members);
+    } else if (action === 'delete') {
+      if (members.length) throw new Error(`${from} still has ${members.length} resume${members.length > 1 ? 's' : ''}. Move or archive them first.`);
+      writeFolders(folders.filter(f => f !== from));
+    } else {
+      throw new Error('Unknown folder action.');
+    }
+    return snapshot();
+  },
+
+  'POST /api/company-rename': async ({ name, to }) => {
+    const from = cleanName(name, 'company');
+    const target = String(to ?? '').trim();
+    const members = listSources().filter(f => readMeta(fs.readFileSync(path.join(HTML_DIR, f), 'utf8'), 'company') === from);
+    for (const f of members) {
+      const p = path.join(HTML_DIR, f);
+      fs.writeFileSync(p, setMeta(fs.readFileSync(p, 'utf8'), 'company', target), 'utf8');
+    }
+    return members.length ? rebuild(members) : snapshot();
+  },
+
+  'POST /api/rename': async ({ file, name }) => {
+    const from = resolveSource(file);
+    const to = cleanFileName(name);
+    if (to === from) return snapshot();
+    if (listSources().includes(to)) throw new Error(`${to} already exists.`);
+    const oldPdf = path.join(PDF_DIR, pdfNameFor(from));
+    const newPdf = path.join(PDF_DIR, to.replace(/\.html$/, '.pdf'));
+    if (fs.existsSync(newPdf)) throw new Error(`${path.basename(newPdf)} already exists in PDF/.`);
+    fs.renameSync(path.join(HTML_DIR, from), path.join(HTML_DIR, to));
+    if (fs.existsSync(oldPdf)) fs.renameSync(oldPdf, newPdf);
+    return { ...(await rebuild([to])), renamed: to };
+  },
+
+  'POST /api/archive': async ({ file }) => {
+    const name = resolveSource(file);
+    const moved = archiveResume(name);
+    const state = await snapshot();
+    writeManifest(state.resumes);
+    return { ...(await snapshot()), moved };
+  },
+
+  'POST /api/details': async ({ file, group, company }) => {
+    const name = resolveSource(file);
+    const htmlPath = path.join(HTML_DIR, name);
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    if (group !== undefined) html = setMeta(html, 'group', group);
+    if (company !== undefined) html = setMeta(html, 'company', company);
+    fs.writeFileSync(htmlPath, html, 'utf8');
+    return rebuild([name]);
+  },
+
+  'POST /api/save': async ({ file, html }) => {
+    const name = resolveSource(file);
+    if (typeof html !== 'string' || !html.includes('<html')) throw new Error('The editor sent an empty or broken page, so nothing was saved.');
+    fs.writeFileSync(path.join(HTML_DIR, name), html, 'utf8');
+    return rebuild([name]);
+  },
+
+  'POST /api/check': async ({ html }) => {
+    if (typeof html !== 'string' || !html.includes('<html')) throw new Error('Nothing to check.');
+    return { metrics: await measureDraft(html) };
+  },
+
+  'POST /api/build': async ({ files }) => {
+    const names = (Array.isArray(files) && files.length ? files : listSources()).map(resolveSource);
+    return rebuild(names);
+  },
+
+  'POST /api/commit': async ({ message }) => {
+    const text = String(message ?? '').trim() || 'Update resumes';
+    await run('git', ['add', '--', 'HTML', 'PDF', 'data'], { cwd: ROOT });
+    await run('git', ['commit', '-m', text], { cwd: ROOT });
+    return snapshot();
+  },
+};
+
+function serveStatic(pathname, res) {
+  let decoded;
+  try { decoded = decodeURIComponent(pathname); } catch { decoded = ''; }
+
+  let target;
+  if (decoded === '/' || decoded === '/index.html') target = path.join(PUBLIC_DIR, 'index.html');
+  else if (/^\/(HTML|PDF|data)\//.test(decoded)) target = path.join(ROOT, decoded);
+  else target = path.join(PUBLIC_DIR, decoded);
+
+  const allowed = [PUBLIC_DIR, HTML_DIR, PDF_DIR, path.join(ROOT, 'data')];
+  const inside = allowed.some(dir => target === dir || target.startsWith(dir + path.sep));
+  if (!inside || !fs.existsSync(target) || !fs.statSync(target).isFile()) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': TYPES[path.extname(target).toLowerCase()] ?? 'application/octet-stream',
+    'Cache-Control': 'no-store',
+  });
+  fs.createReadStream(target).pipe(res);
 }
 
 const server = http.createServer(async (req, res) => {
-  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = parsedUrl.pathname;
+  const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`);
+  const handler = routes[`${req.method} ${pathname}`];
 
-  // CORS headers for local dev convenience
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
+  if (!handler) {
+    if (pathname.startsWith('/api/')) return send(res, 404, { error: 'Unknown endpoint.' });
+    return serveStatic(pathname, res);
   }
-
-  // --- API ROUTING ---
-  if (pathname === '/api/resumes' && req.method === 'GET') {
-    try {
-      const resumes = await listAllResumes();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, resumes }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    }
-    return;
+  if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.host ?? '')) {
+    return send(res, 403, { error: 'Open the dashboard at http://localhost.' });
   }
-
-  if (pathname === '/api/resume/raw' && req.method === 'GET') {
-    try {
-      const filename = parsedUrl.searchParams.get('file');
-      if (!filename) throw new Error('File parameter required');
-      const htmlPath = path.join(HTML_DIR, path.basename(filename));
-      if (!fs.existsSync(htmlPath)) throw new Error('File not found');
-      const html = fs.readFileSync(htmlPath, 'utf8');
-      const violations = validateResumeRules(html);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, html, violations }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    }
-    return;
+  if (req.method === 'POST' && !isSameOriginJson(req)) {
+    return send(res, 403, { error: 'Requests must come from the dashboard itself.' });
   }
-
-  if (pathname === '/api/resume/save' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const { filename, html } = JSON.parse(body || '{}');
-        if (!filename || !html) throw new Error('Filename and HTML content required');
-        
-        const htmlPath = path.join(HTML_DIR, path.basename(filename));
-        fs.writeFileSync(htmlPath, html, 'utf8');
-        
-        // Invalidate metrics cache for corresponding PDF
-        const pdfName = PDF_MAPPINGS[filename] || filename.replace('.html', '.pdf');
-        const pdfPath = path.join(PDF_DIR, pdfName);
-        metricsCache.delete(pdfPath);
-
-        // Compile to PDF
-        const compileResult = await compileResume(filename);
-        const violations = validateResumeRules(html);
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          pdfName: compileResult.pdfName,
-          metrics: compileResult.metrics,
-          violations
-        }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
-    return;
-  }
-
-  if (pathname === '/api/resume/check-headroom' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const { html, filename } = JSON.parse(body || '{}');
-        if (!html) throw new Error('HTML content required');
-
-        const tempHtml = `/tmp/check_${Date.now()}.html`;
-        const tempPdf = `/tmp/check_${Date.now()}.pdf`;
-
-        fs.writeFileSync(tempHtml, html, 'utf8');
-        await execAsync(`google-chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${tempPdf}" "file://${tempHtml}"`);
-        const metrics = await getPdfMetrics(tempPdf);
-
-        // Cleanup temp files
-        fs.unlink(tempHtml, () => {});
-        fs.unlink(tempPdf, () => {});
-
-        const violations = validateResumeRules(html);
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, metrics, violations }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
-    return;
-  }
-
-  if (pathname === '/api/compile' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const { filename } = JSON.parse(body || '{}');
-        if (!filename) throw new Error('Filename required');
-        const result = await compileResume(filename);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, ...result }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
-    return;
-  }
-
-  if (pathname === '/api/git' && req.method === 'GET') {
-    try {
-      const gitStatus = await getGitWorkspaceStatus();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, ...gitStatus }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    }
-    return;
-  }
-
-  if (pathname === '/api/git/commit' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const { message, files } = JSON.parse(body || '{}');
-        if (!message) throw new Error('Commit message is required');
-
-        const fileArgs = files && files.length > 0 ? files.map(f => `"${f}"`).join(' ') : 'HTML/ PDF/';
-        await execAsync(`git add ${fileArgs}`, { cwd: WORKSPACE_ROOT });
-        const { stdout } = await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: WORKSPACE_ROOT });
-
-        const newStatus = await getGitWorkspaceStatus();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, output: stdout, ...newStatus }));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
-    return;
-  }
-
-  if (pathname === '/api/diff' && req.method === 'GET') {
-    try {
-      const file = parsedUrl.searchParams.get('file');
-      if (!file) throw new Error('File parameter is required');
-      const { stdout } = await execAsync(`git diff "${file}" || true`, { cwd: WORKSPACE_ROOT });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, diff: stdout }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    }
-    return;
-  }
-
-  // --- STATIC FILE SERVING ---
-  let targetPath = null;
-  if (pathname === '/' || pathname === '/index.html') {
-    targetPath = path.join(PUBLIC_DIR, 'index.html');
-  } else if (pathname.startsWith('/HTML/')) {
-    targetPath = path.join(WORKSPACE_ROOT, pathname);
-  } else if (pathname.startsWith('/PDF/')) {
-    targetPath = path.join(WORKSPACE_ROOT, pathname);
-  } else {
-    // Serve from public directory
-    targetPath = path.join(PUBLIC_DIR, pathname);
-  }
-
-  if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()) {
-    const ext = path.extname(targetPath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
-    fs.createReadStream(targetPath).pipe(res);
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('404 Not Found');
+  try {
+    const body = req.method === 'POST' ? await readJson(req) : {};
+    send(res, 200, await handler(body, searchParams));
+  } catch (err) {
+    const detail = (err.stderr || err.stdout || err.message || String(err)).toString().trim().split('\n')[0];
+    send(res, 400, { error: detail });
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚀 Resume Warehouse Dashboard running at:`);
-  console.log(`   http://localhost:${PORT}`);
-  console.log(`======================================================\n`);
+server.listen(PORT, HOST, () => {
+  console.log(`Resume dashboard: http://localhost:${PORT}`);
 });

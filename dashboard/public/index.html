@@ -2,339 +2,265 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resume Warehouse - Engineering Management & Version Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resume Desk</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7' y='3' width='18' height='26' rx='2' fill='%23fff' stroke='%231F5FAD' stroke-width='2'/%3E%3Cpath d='M11 10h10M11 14h10M11 18h6' stroke='%231F5FAD' stroke-width='2'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <div class="app">
+    <aside class="rail" id="rail">
+      <header class="rail-head">
+        <div class="rail-title">
+          <h1>Resumes</h1>
+          <button type="button" class="btn small primary" id="newBtn" hidden>New</button>
+        </div>
+        <p id="summary" class="muted">Loading...</p>
+      </header>
 
-  <!-- Top App Bar -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="logo-mark">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-          <polyline points="10 9 9 9 8 9"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-title">Resume Warehouse</div>
-        <div class="brand-subtitle">Deepakraj B - Tailored Engineering Profiles</div>
-      </div>
-    </div>
-
-    <div class="topbar-center">
-      <div class="git-pill">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
-        <span class="branch-name" id="currentBranch">main</span>
-        <span class="git-divider">|</span>
-        <span class="commit-hash" id="latestCommitHash">---</span>
-      </div>
-    </div>
-
-    <div class="topbar-actions">
-      <button class="btn btn-secondary" id="btnRecompileAll" title="Recompile all HTML templates to PDF">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        <span>Recompile All</span>
-      </button>
-      <button class="btn btn-primary" id="btnOpenGitModal">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
-        <span>Version Control</span>
-        <span class="dirty-badge hidden" id="dirtyCounter">0</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Filter & Search Toolbar -->
-  <section class="toolbar">
-    <div class="search-box">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="Search by role, framework, or skill (e.g. React, Python, Java, Docker)..." autocomplete="off">
-      <button id="clearSearch" class="btn-clear hidden">×</button>
-    </div>
-
-    <div class="category-tabs" id="categoryTabs">
-      <button class="cat-pill active" data-category="ALL">All Resumes <span class="count-badge" id="allCount">0</span></button>
-      <button class="cat-pill" data-category="Full Stack">Full Stack</button>
-      <button class="cat-pill" data-category="Forward Deployed">Forward Deployed</button>
-      <button class="cat-pill" data-category="Backend">Backend / Kotlin</button>
-      <button class="cat-pill" data-category="Python & AI">Python & AI</button>
-      <button class="cat-pill" data-category="ERP / Enterprise">ERPNext</button>
-    </div>
-  </section>
-
-  <!-- Main Split Layout -->
-  <main class="main-layout">
-    <!-- Left: Resume Cards Catalog -->
-    <aside class="catalog-panel">
-      <div class="catalog-header">
-        <div class="catalog-count-label">Available Profiles (<span id="visibleCount">0</span>)</div>
-        <button class="btn-icon" id="btnRefreshList" title="Refresh file catalog">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        </button>
+      <div class="segmented group-by" role="group" aria-label="Group resumes by">
+        <button type="button" data-group="group" aria-pressed="true">By group</button>
+        <button type="button" data-group="company" aria-pressed="false">By company</button>
       </div>
 
-      <div class="resume-list" id="resumeList">
-        <!-- Rendered dynamically -->
-        <div class="loading-state">Scanning resumes...</div>
+      <div id="staleBox" class="rail-note" hidden>
+        <p id="staleText"></p>
+        <button type="button" class="btn small" id="rebuildStale">Rebuild PDFs</button>
       </div>
+
+      <nav id="list" class="list" aria-label="Resumes"></nav>
+
+      <form id="commitBox" class="commit" hidden>
+        <label for="commitMessage" id="commitLabel"></label>
+        <div class="commit-row">
+          <input id="commitMessage" type="text" placeholder="Update resumes" autocomplete="off">
+          <button type="submit" class="btn small">Commit</button>
+        </div>
+      </form>
     </aside>
 
-    <!-- Right: Active Resume Preview & Inspector -->
-    <section class="preview-panel">
-      <!-- Active Resume Header -->
-      <div class="preview-header">
-        <div class="preview-meta">
-          <h2 class="active-title" id="activeTitle">Select a Resume</h2>
-          <div class="active-subtext" id="activeSubtext">Choose any resume from the left catalog to inspect and manage.</div>
-        </div>
-
-        <div class="preview-controls">
-          <!-- View Modes -->
-          <div class="view-mode-tabs">
-            <button class="mode-tab active" data-mode="html">Live HTML</button>
-            <button class="mode-tab" data-mode="editor">⚡ Side-by-Side Editor</button>
-            <button class="mode-tab" data-mode="pdf">PDF Reader</button>
-            <button class="mode-tab" data-mode="audit">pdfplumber Audit</button>
-            <button class="mode-tab" data-mode="diff">Git Diff</button>
-          </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="action-btn-group">
-            <button class="btn btn-outline" id="btnCompileActive" title="Recompile this resume to PDF">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>Compile PDF</span>
-            </button>
-            <button class="btn btn-outline" id="btnOpenExternal" title="Open raw HTML in new browser tab">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              <span>Open HTML</span>
-            </button>
-            <a class="btn btn-primary" id="btnDownloadPdf" href="#" download target="_blank">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Download PDF</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Audit Metrics Banner -->
-      <div class="audit-banner" id="auditBanner">
-        <div class="audit-item">
-          <span class="audit-label">PAGE COUNT:</span>
-          <span class="audit-val pass" id="metricPages">1 / 1</span>
-        </div>
-        <div class="audit-item">
-          <span class="audit-label">MARGIN SYMMETRY:</span>
-          <span class="audit-val" id="metricMargins">L: -- | R: -- (Delta: --)</span>
-        </div>
-        <div class="audit-item">
-          <span class="audit-label">TRAILING SPACE:</span>
-          <span class="audit-val" id="metricTrailing">-- pt</span>
-        </div>
-        <div class="audit-item">
-          <span class="audit-label">RULE COMPLIANCE:</span>
-          <span class="audit-val pass" id="metricStatus">A4 STRICT (1 PAGE)</span>
-        </div>
-      </div>
-
-      <!-- Zoom & Scale Controller -->
-      <div class="viewport-toolbar" id="viewportToolbar">
-        <div class="zoom-controls">
-          <button class="btn-zoom" id="btnZoomOut">−</button>
-          <span class="zoom-level" id="zoomLevel">100%</span>
-          <button class="btn-zoom" id="btnZoomIn">+</button>
-          <button class="btn-zoom-reset" id="btnZoomFit">Fit A4</button>
-        </div>
-        <div class="file-path-indicator" id="filePathIndicator">HTML/Deepakraj_Full_Stack_Engineer_Resume.html</div>
-      </div>
-
-      <!-- Active Content Viewport -->
-      <div class="viewport-container" id="viewportContainer">
-        <!-- Live HTML Container -->
-        <div class="view-content active" id="viewHtml">
-          <div class="a4-sheet-wrapper" id="a4Wrapper">
-            <iframe id="htmlFrame" src="about:blank" title="Resume Live View"></iframe>
-          </div>
-        </div>
-
-        <!-- Side-by-Side Editor Container -->
-        <div class="view-content" id="viewEditor">
-          <div class="editor-split-layout">
-            <!-- Left: Controls & Blocks -->
-            <div class="editor-panel">
-              <!-- Headroom Gauge Banner -->
-              <div class="headroom-card">
-                <div class="headroom-header">
-                  <div class="headroom-title-group">
-                    <span class="headroom-label">A4 VERTICAL HEADROOM GAUGE</span>
-                    <span class="headroom-badge pass" id="headroomBadge">45.0 pt remaining</span>
-                  </div>
-                  <span class="headroom-status" id="headroomStatus">Comfortable (1 Page)</span>
-                </div>
-                <div class="headroom-meter-track">
-                  <div class="headroom-meter-fill pass" id="headroomMeterFill" style="width: 75%;"></div>
-                </div>
-                <div class="headroom-subtext" id="headroomSubtext">
-                  Target: ~40-55 pt trailing space. Zero overflow beyond 1 page strictly enforced.
-                </div>
-              </div>
-
-              <!-- Rule Compliance Real-Time Linter -->
-              <div class="rules-linter-card" id="rulesLinterCard">
-                <div class="linter-header">
-                  <span class="linter-title">AGENT RULES COMPLIANCE (.agents/AGENTS.md)</span>
-                  <span class="linter-badge pass" id="rulesLinterBadge">100% Passed</span>
-                </div>
-                <div class="rules-check-list" id="rulesCheckList">
-                  <div class="rule-chip pass">✓ No Emojis</div>
-                  <div class="rule-chip pass">✓ Hyphens Only (No –/—)</div>
-                  <div class="rule-chip pass">✓ No AI Buzzwords</div>
-                  <div class="rule-chip pass">✓ width: 100% (No 210mm)</div>
-                  <div class="rule-chip pass">✓ Symmetric Margins</div>
-                </div>
-                <div class="rule-violations-box hidden" id="ruleViolationsBox"></div>
-              </div>
-
-              <!-- Editor Sub-Tabs -->
-              <div class="editor-subtabs">
-                <button class="subtab-btn active" data-tab="blocks">Component Block Editor</button>
-                <button class="subtab-btn" data-tab="raw">Raw HTML Source</button>
-              </div>
-
-              <!-- Tab 1: Visual Block Editor & Component Toggles -->
-              <div class="subtab-content active" id="tabBlocks">
-                <div class="editor-blocks-container" id="editorBlocksContainer">
-                  <!-- Rendered dynamically from current HTML -->
-                  <div class="loading-state">Loading resume structure...</div>
-                </div>
-              </div>
-
-              <!-- Tab 2: Raw Code Editor -->
-              <div class="subtab-content" id="tabRaw">
-                <div class="raw-code-container">
-                  <div class="raw-toolbar">
-                    <span>Direct HTML Source (Changes live-update right preview)</span>
-                    <button class="btn btn-outline" id="btnFormatRaw">Format</button>
-                  </div>
-                  <textarea id="rawHtmlTextarea" spellcheck="false"></textarea>
-                </div>
-              </div>
-
-              <!-- Editor Footer Actions -->
-              <div class="editor-footer">
-                <button class="btn btn-secondary" id="btnRevertEditor" title="Revert to last saved version">Revert</button>
-                <button class="btn btn-outline" id="btnDownloadHtml" title="Download updated HTML file to disk">Download HTML</button>
-                <button class="btn btn-outline" id="btnPrintPdf" title="Print or Save to PDF via browser print">Print / Save PDF</button>
-                <button class="btn btn-outline" id="btnLiveAuditHeadroom">Check pdfplumber</button>
-                <button class="btn btn-primary" id="btnSaveResumeEditor">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  <span>Save & Compile PDF</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Right: Real-time Live A4 Preview -->
-            <div class="editor-preview-panel">
-              <div class="editor-preview-toolbar">
-                <span class="preview-mode-tag">LIVE A4 HOT-RELOAD PREVIEW</span>
-                <span class="page-fit-indicator" id="editorPageFitIndicator">Page 1 / 1 (Fits A4)</span>
-              </div>
-              <div class="editor-a4-wrapper" id="editorA4Wrapper">
-                <div class="a4-cutoff-marker" title="A4 Height Limit (297mm)"><span>Page 1 Boundary (297mm)</span></div>
-                <iframe id="editorPreviewFrame" src="about:blank" title="Live Editor Preview"></iframe>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PDF Reader Container -->
-        <div class="view-content" id="viewPdf">
-          <iframe id="pdfFrame" src="about:blank" title="PDF Viewer"></iframe>
-        </div>
-
-        <!-- Audit Details Container -->
-        <div class="view-content" id="viewAudit">
-          <div class="audit-details-card" id="auditDetailsCard">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-
-        <!-- Git Diff Container -->
-        <div class="view-content" id="viewDiff">
-          <div class="diff-view-wrapper">
-            <div class="diff-header" id="diffHeader">No uncommitted changes in this file.</div>
-            <pre class="diff-code" id="diffCode">Clean working tree.</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Git Version Control Modal -->
-  <div class="modal-overlay hidden" id="gitModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <div class="modal-title">Git Version Control & Snapshot</div>
-          <div class="modal-subtitle">Track, stage, and commit changes across your resume templates</div>
-        </div>
-        <button class="btn-close" id="btnCloseGitModal">×</button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Changes list -->
-        <div class="git-status-section">
-          <div class="section-label">WORKING TREE STATUS:</div>
-          <div class="changed-files-list" id="changedFilesList">
-            <div class="clean-note">No unstaged changes. Working directory is clean!</div>
-          </div>
-        </div>
-
-        <!-- Commit Form -->
-        <div class="commit-form-section">
-          <label for="commitMessageInput" class="section-label">COMMIT MESSAGE:</label>
-          <textarea id="commitMessageInput" rows="3" placeholder="e.g. feat(resume): refine Sentinel Kote bullets with React UI and offline sync metrics"></textarea>
-          <div class="commit-hint">Standard conventional commits (feat, fix, style, docs) recommended.</div>
-        </div>
-
-        <!-- GitHub Cloud Sync & CI Token (For Vercel) -->
-        <div class="git-status-section" style="margin-top: 10px;">
-          <label for="githubPatInput" class="section-label">GITHUB PAT (OPTIONAL FOR 1-CLICK COMMITS ON VERCEL):</label>
-          <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <input type="password" id="githubPatInput" class="field-input" placeholder="ghp_... (Stored safely in browser localStorage)" style="flex: 1;">
-            <button class="btn btn-outline" id="btnSaveGithubPat">Save Token</button>
-          </div>
-          <div class="commit-hint">Allows committing changes directly from Vercel to <code>deepakraaaj/Resume-warehouse</code>, triggering the GitHub Actions A4 PDF compiler automatically!</div>
-        </div>
-
-        <!-- Recent Commit Log -->
-        <div class="recent-commits-section">
-          <div class="section-label">RECENT COMMITS:</div>
-          <div class="commits-timeline" id="commitsTimeline">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelModal">Close</button>
-        <button class="btn btn-primary" id="btnExecuteCommit">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
-          <span>Commit & Version Changes</span>
+    <main class="desk">
+      <header class="bar">
+        <button type="button" class="btn rail-toggle" id="railToggle" aria-controls="rail" aria-expanded="false">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg>
+          <span>Resumes</span>
         </button>
+        <div class="bar-title">
+          <h2 id="title">&nbsp;</h2>
+          <p id="subtitle" class="subtitle muted">&nbsp;</p>
+        </div>
+
+        <div class="actions" id="viewActions">
+          <button type="button" class="btn" id="editBtn" hidden>Edit</button>
+          <button type="button" class="btn" id="duplicateBtn" hidden>Duplicate</button>
+          <a class="btn" id="openPdf" target="_blank" rel="noopener">Open PDF</a>
+          <button type="button" class="btn" id="copyLink" hidden>Copy PDF link</button>
+          <button type="button" class="btn more-btn" id="moreBtn" aria-haspopup="menu">More</button>
+          <a class="btn primary" id="downloadPdf" download>Download PDF</a>
+        </div>
+
+        <div class="actions" id="editActions" hidden>
+          <span class="dirty muted" id="dirtyNote"></span>
+          <button type="button" class="btn" id="sourceBtn" aria-pressed="false">Show source</button>
+          <a class="btn" id="openPdfEdit" target="_blank" rel="noopener" title="Opens the last saved PDF">Open PDF</a>
+          <button type="button" class="btn" id="doneBtn">Done</button>
+          <button type="button" class="btn primary" id="saveBtn">Save and build PDF</button>
+        </div>
+      </header>
+
+      <section class="checks" aria-label="Checks">
+        <ul id="checks" class="check-list"></ul>
+        <p id="checkSource" class="muted check-source"></p>
+      </section>
+      <div id="issues" class="issues" hidden></div>
+      <div id="notice" class="notice" role="status" hidden></div>
+
+      <div class="work">
+      <div class="stage" id="stage">
+        <textarea id="source" class="source" spellcheck="false" aria-label="HTML source" hidden></textarea>
+        <div class="sheet-col" id="sheetCol">
+          <div class="sheet-frame" id="sheetFrame">
+            <div class="sheet" id="sheet">
+              <iframe id="page" title="Resume page"></iframe>
+              <div class="spare" id="spare" hidden><span class="note" id="spareNote"></span></div>
+              <div class="spill" id="spill" hidden><span class="note" id="spillNote"></span></div>
+            </div>
+            <form class="link-editor" id="linkEditor" hidden>
+              <label>Shown as<input id="linkText" type="text" autocomplete="off"></label>
+              <label>Link address<input id="linkHref" type="text" inputmode="url" autocomplete="off" spellcheck="false"></label>
+              <p class="link-error" id="linkError" hidden>Use a web address, an email address or a phone number.</p>
+              <div class="link-tools">
+                <button type="button" class="text-btn" id="linkShowAddress">Show the address</button>
+                <button type="button" class="text-btn" id="linkOpen">Open</button>
+                <button type="button" class="text-btn" id="linkUnlink">Remove link</button>
+              </div>
+              <div class="link-actions">
+                <button type="button" class="btn small" id="linkCancel">Cancel</button>
+                <button type="submit" class="btn small primary">Apply</button>
+              </div>
+            </form>
+          </div>
+          <div class="under-sheet">
+            <button type="button" class="btn small" id="zoomBtn">Actual size</button>
+          </div>
+          <p class="edit-hint muted" id="editHint" hidden>Click any text on the page to change it. Click a link to change where it points. Enter adds a bullet, Backspace on an empty bullet removes it. Ctrl+S saves.</p>
+        </div>
       </div>
-    </div>
+
+      <aside class="panel" aria-label="Design and ATS tools">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tabDesign" aria-selected="true" aria-controls="designPane">Design</button>
+          <button type="button" role="tab" id="tabAts" aria-selected="false" aria-controls="atsPane">ATS</button>
+          <button type="button" role="tab" id="tabHistory" aria-selected="false" aria-controls="historyPane">History</button>
+        </div>
+
+        <div class="pane" id="designPane" role="tabpanel" aria-labelledby="tabDesign">
+          <p class="pane-note" id="designNote" hidden></p>
+
+          <section class="group">
+            <button type="button" class="btn primary wide" id="fitBtn">Fit to one page</button>
+            <p class="hint muted">Picks the largest text size that still leaves 42 pt free at the bottom.</p>
+          </section>
+
+          <section class="group">
+            <h3>Text</h3>
+            <label class="row">
+              <span>Font</span>
+              <select id="fontSel"></select>
+            </label>
+            <div class="row stepper" data-tool="text">
+              <span>Size</span>
+              <span class="step"><button type="button" aria-label="Smaller text">&minus;</button><output id="textOut">-</output><button type="button" aria-label="Larger text">+</button></span>
+            </div>
+            <div class="row stepper" data-tool="line">
+              <span>Line spacing</span>
+              <span class="step"><button type="button" aria-label="Tighter lines">&minus;</button><output id="lineOut">-</output><button type="button" aria-label="Looser lines">+</button></span>
+            </div>
+          </section>
+
+          <section class="group">
+            <h3>Spacing</h3>
+            <div class="row stepper" data-tool="space">
+              <span>Between sections</span>
+              <span class="step"><button type="button" aria-label="Less space between sections">&minus;</button><output id="spaceOut">-</output><button type="button" aria-label="More space between sections">+</button></span>
+            </div>
+            <div class="row stepper" data-tool="side">
+              <span>Side margins</span>
+              <span class="step"><button type="button" aria-label="Narrower side margins">&minus;</button><output id="sideOut">-</output><button type="button" aria-label="Wider side margins">+</button></span>
+            </div>
+            <div class="row stepper" data-tool="vert">
+              <span>Top and bottom</span>
+              <span class="step"><button type="button" aria-label="Smaller top and bottom margins">&minus;</button><output id="vertOut">-</output><button type="button" aria-label="Larger top and bottom margins">+</button></span>
+            </div>
+          </section>
+
+          <section class="group">
+            <h3>Accent colour</h3>
+            <div class="swatches">
+              <span id="swatches" class="swatch-row"></span>
+              <button type="button" class="swatch custom" id="customSwatch" title="Custom colour" aria-label="Custom colour" aria-expanded="false" aria-controls="customColour"></button>
+            </div>
+            <div class="custom-colour" id="customColour" hidden>
+              <label class="slider">
+                <span>Hue</span>
+                <input type="range" id="hueRange" min="0" max="359" step="1">
+              </label>
+              <label class="slider">
+                <span>Depth</span>
+                <input type="range" id="depthRange" min="15" max="48" step="1">
+              </label>
+              <label class="row">
+                <span>Hex</span>
+                <input type="text" id="hexInput" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#0369a1">
+              </label>
+            </div>
+          </section>
+
+          <section class="group">
+            <h3>Skills layout</h3>
+            <div class="segmented" role="group" aria-label="Skills columns">
+              <button type="button" data-columns="1" aria-pressed="false">One column</button>
+              <button type="button" data-columns="2" aria-pressed="false">Two columns</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <h3>Sections</h3>
+            <ol id="sectionList" class="sections"></ol>
+          </section>
+        </div>
+
+        <div class="pane" id="atsPane" role="tabpanel" aria-labelledby="tabAts" hidden>
+          <section class="group">
+            <h3>Checks</h3>
+            <ul id="atsChecks" class="ats-list"></ul>
+          </section>
+          <section class="group">
+            <h3>Match a job</h3>
+            <textarea id="jdInput" rows="5" placeholder="Paste a job description to see which of its keywords this resume covers."></textarea>
+            <div id="jdResult"></div>
+          </section>
+          <section class="group">
+            <h3>What an ATS reads</h3>
+            <p class="hint muted" id="atsTextNote"></p>
+            <pre id="atsText" class="ats-text"></pre>
+          </section>
+        </div>
+        <div class="pane" id="historyPane" role="tabpanel" aria-labelledby="tabHistory" hidden>
+          <section class="group">
+            <h3>Versions of this resume</h3>
+            <p class="hint muted" id="historyNote">Click a version to preview it on the page. Restore puts it in the editor, and nothing changes until you save.</p>
+            <ol class="timeline" id="timeline"></ol>
+          </section>
+        </div>
+      </aside>
+      </div>
+    </main>
   </div>
 
-  <!-- Toast Notification System -->
-  <div class="toast-container" id="toastContainer"></div>
+  <dialog class="dialog" id="createDialog" aria-labelledby="createTitle">
+    <form id="createForm">
+      <h2 id="createTitle">New resume</h2>
+      <label>Start from
+        <select id="createFrom"></select>
+      </label>
+      <label>Role
+        <input id="createRole" type="text" required minlength="2" maxlength="80" autocomplete="off" placeholder="For example, Platform Engineer">
+      </label>
+      <label>Target company <span class="muted">(optional)</span>
+        <input id="createCompany" type="text" maxlength="60" autocomplete="off" placeholder="For example, Stripe">
+      </label>
+      <p class="hint muted">Copies the resume you start from and builds its PDF. Tailor the text afterwards with Edit.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="createCancel">Cancel</button>
+        <button type="submit" class="btn primary" id="createSubmit">Create resume</button>
+      </div>
+    </form>
+  </dialog>
 
-  <script src="/app.js"></script>
+  <dialog class="dialog" id="askDialog" aria-labelledby="askTitle">
+    <form id="askForm">
+      <h2 id="askTitle"></h2>
+      <label><span id="askLabel"></span>
+        <input id="askInput" type="text" autocomplete="off" spellcheck="false" list="askOptions">
+      </label>
+      <datalist id="askOptions"></datalist>
+      <p class="hint muted" id="askHint"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="askCancel">Cancel</button>
+        <button type="submit" class="btn primary" id="askOk">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="context-menu" id="contextMenu" role="menu" hidden></div>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

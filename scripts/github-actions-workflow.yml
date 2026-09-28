@@ -51,19 +51,14 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install pdfplumber
 
-      - name: Compile Resumes to PDF & Audit Layout
-        run: |
-          python3 scripts/compile_resumes.py
-
-      - name: Generate Static Data Manifest
-        run: |
-          node scripts/generate_manifest.mjs
+      - name: Build PDFs, check they fit one page, refresh manifest
+        run: npm run pdf
 
       - name: Commit and Push Updated PDFs & Manifest
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add PDF/ data/ dashboard/public/data/
+          git add PDF/ data/
           if git diff --staged --quiet; then
             echo "No changes in compiled PDFs or manifest."
           else
