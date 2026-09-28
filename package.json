@@ -1,16 +1,11 @@
 {
   "name": "resume-warehouse",
-  "version": "1.0.0",
-  "description": "Resume warehouse, A4 layout verification, and interactive management dashboard",
+  "version": "2.0.0",
+  "description": "Tailored one-page resumes, their PDFs, and a local desk for editing and checking them",
   "type": "module",
   "scripts": {
-    "build": "node scripts/generate_manifest.mjs",
     "start": "node dashboard/server.mjs",
-    "dashboard": "node dashboard/server.mjs",
-    "compile": "python3 scripts/compile_resumes.py",
-    "audit": "python3 scripts/compile_resumes.py"
-  },
-  "dependencies": {
-    "pngjs": "^7.0.0"
+    "pdf": "node scripts/build.mjs --pdf",
+    "build": "node scripts/build.mjs"
   }
 }

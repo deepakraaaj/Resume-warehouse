@@ -38,3 +38,6 @@ yarn-error.log*
 # Sub-repositories
 Portfolio/
 
+
+# Local tooling output
+.playwright-mcp/
