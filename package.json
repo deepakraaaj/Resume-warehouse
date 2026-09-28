@@ -1,11 +1,19 @@
 {
   "name": "resume-warehouse",
   "version": "2.0.0",
-  "description": "Tailored one-page resumes, their PDFs, and a local desk for editing and checking them",
+  "description": "Tailored one-page resumes with an online editor, PDF builder and ATS checks",
   "type": "module",
   "scripts": {
     "start": "node dashboard/server.mjs",
     "pdf": "node scripts/build.mjs --pdf",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs --site",
+    "add-user": "node --env-file=.env.local scripts/add-user.mjs",
+    "import-local": "node --env-file=.env.local scripts/import-local.mjs"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^153.0.0",
+    "@vercel/blob": "^2.8.0",
+    "pdfjs-dist": "^6.3.289",
+    "puppeteer-core": "^25.12.0"
   }
 }

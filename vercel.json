@@ -1,18 +1,17 @@
 {
   "buildCommand": "node scripts/build.mjs --site",
   "outputDirectory": "public",
-  "headers": [
-    {
-      "source": "/PDF/(.*)",
-      "headers": [
-        { "key": "Content-Type", "value": "application/pdf" },
-        { "key": "Content-Disposition", "value": "inline" }
-      ]
-    },
-    {
-      "source": "/(HTML|data)/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+  "regions": ["bom1"],
+  "functions": {
+    "api/app.js": {
+      "maxDuration": 60,
+      "includeFiles": "fonts/**"
     }
-  ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  },
+  "rewrites": [
+    { "source": "/api/:route*", "destination": "/api/app?route=:route*" },
+    { "source": "/HTML/:file", "destination": "/api/app?route=html&file=:file" },
+    { "source": "/PDF/:file", "destination": "/api/app?route=pdf&name=:file" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

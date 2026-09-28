@@ -66,24 +66,29 @@ async function api(path, body) {
     body: JSON.stringify(body ?? {}),
   });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && data.signIn) showAuth('signIn');
   if (!res.ok) throw new Error(data.error ?? `The server answered ${res.status}.`);
   return data;
 }
 
 // ---------- Data ----------
 
+// Returns the desk's state, or null after showing the sign-in or password screen.
 async function fetchState() {
-  try {
-    const res = await fetch('/api/state', { cache: 'no-store' });
-    if (res.ok && res.headers.get('content-type')?.includes('json')) return await res.json();
-  } catch {}
-  const res = await fetch('/data/resumes.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error('data/resumes.json is missing. Run npm run build.');
-  return { mode: 'static', ...(await res.json()) };
+  const res = await fetch('/api/state', { cache: 'no-store' });
+  const json = res.headers.get('content-type')?.includes('json');
+  const data = json ? await res.json().catch(() => ({})) : {};
+  if (res.status === 401) { showAuth('signIn'); return null; }
+  if (res.status === 403 && data.mustChangePassword) { showAuth('password'); return null; }
+  if (!res.ok || !json) throw new Error(data.error ?? 'The desk could not load your resumes. Try again in a moment.');
+  return data;
 }
 
 function applyState(data) {
-  state.mode = data.mode === 'local' ? 'local' : 'static';
+  state.mode = data.mode === 'local' || data.mode === 'cloud' ? data.mode : 'static';
+  state.account = data.account ?? state.account ?? null;
+  $('accountBar').hidden = !state.account;
+  if (state.account) $('accountEmail').textContent = state.account.email;
   state.resumes = data.resumes ?? [];
   state.changes = data.changes ?? [];
   state.folders = data.folders ?? [];
@@ -113,7 +118,7 @@ function renderRail() {
   else summary += 'All fit on one page.';
   $('summary').textContent = summary;
 
-  const stale = state.mode === 'local' ? list.filter(r => r.stale) : [];
+  const stale = state.mode !== 'static' ? list.filter(r => r.stale) : [];
   $('staleBox').hidden = stale.length === 0;
   $('staleText').textContent = stale.length === 1
     ? '1 PDF is older than its HTML.'
@@ -129,7 +134,7 @@ function renderRail() {
   }
   if (!byCompany) for (const f of state.folders) if (!groups.has(f)) groups.set(f, []);
   const names = [...groups.keys()].sort((a, b) => (a === NO_COMPANY) - (b === NO_COMPANY) || a.localeCompare(b));
-  const canMove = state.mode === 'local';
+  const canMove = state.mode !== 'static';
 
   const icon = path => `<svg class="tree-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
   const FILE = '<path d="M4 1.75h5.5L12.5 4.75v9.5H4z"/><path d="M9.25 1.75v3.25h3.25"/><path d="M6 8h4.5M6 10.5h4.5"/>';
@@ -209,9 +214,9 @@ function renderRail() {
     }
     return section;
   }));
-  $('newBtn').hidden = state.mode !== 'local';
+  $('newBtn').hidden = state.mode === 'static';
 
-  const showCommit = state.mode === 'local' && state.changes.length > 0;
+  const showCommit = state.mode !== 'static' && state.changes.length > 0;
   $('commitBox').hidden = !showCommit;
   $('commitLabel').textContent = `${state.changes.length} changed file${state.changes.length === 1 ? '' : 's'} not committed`;
 }
@@ -259,7 +264,7 @@ function renderHeader() {
   $('title').textContent = r ? r.role : 'No resume selected';
   $('subtitle').textContent = r ? [r.focus || r.pdf, r.company && `for ${r.company}`].filter(Boolean).join(', ') : '';
 
-  const local = state.mode === 'local';
+  const local = state.mode !== 'static';
   $('viewActions').hidden = state.editing;
   $('editActions').hidden = !state.editing;
   $('editBtn').hidden = !local || !r || Boolean(state.preview);
@@ -340,7 +345,7 @@ function checkModel() {
 
   let source = '';
   if (checked) source = 'Checked with a test print of your changes.';
-  else if (live) source = state.mode === 'local' ? 'Estimate while you edit. Checking with a test print...' : 'Estimate while you edit.';
+  else if (live) source = state.mode !== 'static' ? 'Estimate while you edit. Checking with a test print...' : 'Estimate while you edit.';
   else if (m) source = `Measured from the PDF built ${relTime(r.pdfUpdatedAt)}.`;
 
   return { items, source, spare, pages, live };
@@ -410,7 +415,7 @@ function renderNotice() {
     );
     return;
   }
-  if (state.mode === 'local' && r && r.stale && !state.editing) {
+  if (state.mode !== 'static' && r && r.stale && !state.editing) {
     box.hidden = false;
     box.className = 'notice';
     box.replaceChildren(
@@ -754,7 +759,7 @@ const applySource = debounce(() => loadPage($('source').value), 400);
 // Prints the draft with the same Chrome that builds the PDF, then re-aims the on-screen estimate at that result.
 let checkSeq = 0;
 const verifyDraft = debounce(async () => {
-  if (!state.editing || !state.dirty || state.mode !== 'local') return;
+  if (!state.editing || !state.dirty || state.mode === 'static') return;
   const seq = ++checkSeq;
   const html = currentHtml();
   const raw = (PAGE_H - contentBottom(pageDoc())) / PX_PER_PT;
@@ -888,7 +893,7 @@ const GIT_ICONS = {
 async function loadHistory(force = false) {
   const r = current();
   if (!r || $('historyPane').hidden) return;
-  if (state.mode !== 'local') {
+  if (state.mode === 'static') {
     $('historyNote').textContent = 'History needs the local dashboard. Run npm start and open http://localhost:4000.';
     $('timeline').replaceChildren();
     return;
@@ -1163,9 +1168,10 @@ async function setCompanyFor(r) {
 
 async function archive(r) {
   if (blockedByEdits(r.file)) return;
-  if (!confirm(`Move "${r.role}" (${r.file}) to the archive?\n\nIts HTML and PDF move to "Archieve Resumes/". Nothing is deleted.`)) return;
+  const where = state.mode === 'cloud' ? 'the archive in your account' : '"Archieve Resumes/"';
+  if (!confirm(`Move "${r.role}" (${r.file}) to the archive?\n\nIts HTML and PDF move to ${where}. Nothing is deleted.`)) return;
   const wasCurrent = r.file === state.file;
-  const data = await run(() => api('/api/archive', { file: r.file }), 'Moved to Archieve Resumes.');
+  const data = await run(() => api('/api/archive', { file: r.file }), 'Moved to the archive.');
   if (data && wasCurrent) {
     state.file = null;
     if (state.resumes[0]) select(state.resumes[0].file);
@@ -1215,7 +1221,7 @@ function hideMenu() {
 }
 
 function fileMenu(r) {
-  const local = state.mode === 'local';
+  const local = state.mode !== 'static';
   return [
     { label: 'Open', run: () => select(r.file) },
     local && { label: 'Edit', run: async () => { await select(r.file); if (state.file === r.file) startEditing(); } },
@@ -1233,7 +1239,7 @@ function fileMenu(r) {
 }
 
 function folderMenu(name, count) {
-  if (state.mode !== 'local') return [{ label: 'Collapse all', run: () => setAllFolders(false) }, { label: 'Expand all', run: () => setAllFolders(true) }];
+  if (state.mode === 'static') return [{ label: 'Collapse all', run: () => setAllFolders(false) }, { label: 'Expand all', run: () => setAllFolders(true) }];
   if (state.groupBy === 'company') {
     const none = name === NO_COMPANY;
     return [
@@ -1257,7 +1263,7 @@ function folderMenu(name, count) {
 }
 
 function blankMenu() {
-  const local = state.mode === 'local';
+  const local = state.mode !== 'static';
   return [
     local && { label: 'New resume...', run: () => openCreate('new') },
     local && state.groupBy === 'group' && { label: 'New folder...', run: newFolder },
@@ -1327,14 +1333,14 @@ $('list').addEventListener('keydown', e => {
     showMenu(box.left + 24, box.bottom, menuFor(row));
     return;
   }
-  if (state.mode === 'local' && e.key === 'F2') {
+  if (state.mode !== 'static' && e.key === 'F2') {
     e.preventDefault();
     if (r) renameFile(r);
     else if (state.groupBy === 'company') { if (row.dataset.name !== NO_COMPANY) renameCompany(row.dataset.name); }
     else renameFolder(row.dataset.name);
     return;
   }
-  if (state.mode === 'local' && e.key === 'Delete' && r) {
+  if (state.mode !== 'static' && e.key === 'Delete' && r) {
     e.preventDefault();
     archive(r);
     return;
@@ -1375,7 +1381,7 @@ $('moreBtn').addEventListener('click', () => {
   const r = current();
   if (!r) return;
   const box = $('moreBtn').getBoundingClientRect();
-  const local = state.mode === 'local';
+  const local = state.mode !== 'static';
   showMenu(box.left, box.bottom + 4, [
     r.pdfExists && { label: 'Open PDF', run: () => window.open(`/PDF/${encodeURIComponent(r.pdf)}`, '_blank', 'noopener') },
     !local && r.pdfExists && { label: 'Copy PDF link', run: () => $('copyLink').click() },
@@ -1451,14 +1457,14 @@ new ResizeObserver(fitSheet).observe($('sheetCol'));
 const tools = initTools({
   doc: pageDoc,
   resume: current,
-  canEdit: () => state.mode === 'local',
-  isLocal: () => state.mode === 'local',
+  canEdit: () => state.mode !== 'static',
+  isLocal: () => state.mode !== 'static',
   isDirty: () => state.dirty,
   ensureEditing: () => { if (!state.editing) startEditing(); },
   changed,
   estimateSpare,
   currentHtml,
-  checkHtml: html => (state.mode === 'local' ? checkHtml(html) : Promise.resolve(null)),
+  checkHtml: html => (state.mode !== 'static' ? checkHtml(html) : Promise.resolve(null)),
   setCalibration: metrics => {
     if (metrics.pages === 1) state.calibration = metrics.spare - (PAGE_H - contentBottom(pageDoc())) / PX_PER_PT;
     state.verified = metrics;
@@ -1467,12 +1473,87 @@ const tools = initTools({
   toast,
 });
 
-try {
-  applyState(await fetchState());
-  const wanted = new URLSearchParams(location.search).get('r');
-  const first = state.resumes.find(r => r.file === `${wanted}.html`) ?? state.resumes[0];
-  if (first) select(first.file);
-  else $('summary').textContent = 'No resumes found in HTML/.';
-} catch (err) {
-  $('summary').textContent = err.message;
+// ---------- Sign-in ----------
+
+function showAuth(which) {
+  $('app').hidden = true;
+  $('auth').hidden = false;
+  $('signInForm').hidden = which !== 'signIn';
+  $('passwordForm').hidden = which !== 'password';
+  $(which === 'signIn' ? 'signInEmail' : 'currentPassword').focus();
 }
+
+function hideAuth() {
+  $('auth').hidden = true;
+  $('app').hidden = false;
+}
+
+async function authPost(path, body, button, errorBox) {
+  const label = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Please wait...';
+  errorBox.hidden = true;
+  try {
+    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? 'Something went wrong. Try again.');
+    return data;
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.hidden = false;
+    return null;
+  } finally {
+    button.disabled = false;
+    button.textContent = label;
+  }
+}
+
+$('signInForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = await authPost('/api/login', { email: $('signInEmail').value, password: $('signInPassword').value }, $('signInBtn'), $('signInError'));
+  if (!data) return;
+  $('signInPassword').value = '';
+  if (data.mustChangePassword) {
+    $('currentPassword').value = '';
+    showAuth('password');
+  } else start();
+});
+
+$('passwordForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if ($('newPassword').value !== $('newPassword2').value) {
+    $('passwordError').textContent = 'The two new passwords do not match.';
+    $('passwordError').hidden = false;
+    return;
+  }
+  const data = await authPost('/api/password', { current: $('currentPassword').value, next: $('newPassword').value }, $('passwordBtn'), $('passwordError'));
+  if (!data) return;
+  for (const id of ['currentPassword', 'newPassword', 'newPassword2']) $(id).value = '';
+  toast('Password saved.');
+  start();
+});
+
+$('signOutBtn').addEventListener('click', async () => {
+  if (state.dirty && !confirm('Discard your unsaved changes and sign out?')) return;
+  state.dirty = false;
+  await fetch('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {});
+  location.href = '/';
+});
+
+async function start() {
+  try {
+    const data = await fetchState();
+    if (!data) return;
+    hideAuth();
+    applyState(data);
+    const wanted = new URLSearchParams(location.search).get('r');
+    const first = state.resumes.find(r => r.file === `${wanted}.html`) ?? state.resumes[0];
+    if (first) select(first.file);
+    else $('summary').textContent = 'No resumes yet. Click New to start one.';
+  } catch (err) {
+    hideAuth();
+    $('summary').textContent = err.message;
+  }
+}
+
+start();
