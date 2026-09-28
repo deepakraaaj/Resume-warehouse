@@ -1,0 +1,72 @@
+# GitHub Actions Workflow Template
+# To enable this in your GitHub repository:
+# 1. Go to https://github.com/deepakraaaj/Resume-warehouse
+# 2. Click "Add file" -> "Create new file"
+# 3. Name the file: .github/workflows/compile-resumes.yml
+# 4. Paste the content below and click "Commit changes"
+#
+# Once enabled, GitHub Actions will automatically run on every push to HTML/**:
+# - Spin up Ubuntu VM with Google Chrome & Python pdfplumber
+# - Compile exact A4 PDFs
+# - Verify that page count == 1 and margins are symmetrical
+# - Commit the generated PDFs back to the repo!
+
+name: Compile & Audit Resumes (1-Page A4)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'HTML/**'
+      - 'scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile-and-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Google Chrome & pdfplumber
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          python3 -m pip install --upgrade pip
+          pip install pdfplumber
+
+      - name: Compile Resumes to PDF & Audit Layout
+        run: |
+          python3 scripts/compile_resumes.py
+
+      - name: Generate Static Data Manifest
+        run: |
+          node scripts/generate_manifest.mjs
+
+      - name: Commit and Push Updated PDFs & Manifest
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add PDF/ data/ dashboard/public/data/
+          if git diff --staged --quiet; then
+            echo "No changes in compiled PDFs or manifest."
+          else
+            git commit -m "chore(pdf): automated A4 compilation and layout audit [skip ci]"
+            git push origin main
+          fi
