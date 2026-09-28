@@ -1,0 +1,10 @@
+# Upload only what the read-only site build needs.
+/*
+!/HTML
+!/PDF
+!/data
+!/dashboard
+!/scripts
+!/package.json
+!/package-lock.json
+!/vercel.json

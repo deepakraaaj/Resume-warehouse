@@ -1,7 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "node scripts/build.mjs",
-  "cleanUrls": true,
+  "buildCommand": "node scripts/build.mjs --site",
+  "outputDirectory": "public",
   "headers": [
     {
       "source": "/PDF/(.*)",
@@ -9,11 +8,11 @@
         { "key": "Content-Type", "value": "application/pdf" },
         { "key": "Content-Disposition", "value": "inline" }
       ]
+    },
+    {
+      "source": "/(HTML|data)/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     }
   ],
-  "routes": [
-    { "src": "^/(HTML|PDF|data)/(.*)$", "dest": "/$1/$2" },
-    { "src": "^/(app\\.js|rules\\.js|style\\.css)$", "dest": "/dashboard/public/$1" },
-    { "src": "^/.*$", "dest": "/dashboard/public/index.html" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
