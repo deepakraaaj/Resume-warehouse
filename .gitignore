@@ -41,3 +41,6 @@ Portfolio/
 
 # Local tooling output
 .playwright-mcp/
+/public/
+.vercel
+.env*
