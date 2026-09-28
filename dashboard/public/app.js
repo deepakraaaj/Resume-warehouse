@@ -891,10 +891,19 @@ async function saveResumeFromEditor() {
 
     // Fallback: If deployed as a pure static site on Vercel without local server
     if (!savedOnServer) {
-      downloadFile(state.selectedResume.filename, editorState.rawHtml, 'text/html');
-      showToast('Static Mode: Downloaded updated HTML! Commit to GitHub to deploy to Vercel.', 'success');
-      editorState.originalHtml = editorState.rawHtml;
-      editorState.isDirty = false;
+      const pat = localStorage.getItem('github_pat');
+      if (pat) {
+        showToast('Pushing commit directly to GitHub repository...', 'info');
+        await commitDirectToGithub(`HTML/${state.selectedResume.filename}`, editorState.rawHtml, `feat(resume): update ${state.selectedResume.filename} via web dashboard`);
+        showToast('✓ Committed to GitHub! GitHub Actions is now compiling the PDF and deploying to Vercel.', 'success');
+        editorState.originalHtml = editorState.rawHtml;
+        editorState.isDirty = false;
+      } else {
+        downloadFile(state.selectedResume.filename, editorState.rawHtml, 'text/html');
+        showToast('Static Mode: Downloaded HTML! Add a GitHub PAT in the Git modal for 1-click cloud sync.', 'info');
+        editorState.originalHtml = editorState.rawHtml;
+        editorState.isDirty = false;
+      }
     }
   } catch (err) {
     showToast(`Save error: ${err.message}`, 'error');
@@ -905,6 +914,58 @@ async function saveResumeFromEditor() {
       <span>Save & Compile PDF</span>
     `;
   }
+}
+
+// Direct GitHub REST API Commit (Works on Vercel without a server!)
+async function commitDirectToGithub(filepath, content, commitMessage) {
+  const token = localStorage.getItem('github_pat');
+  if (!token) throw new Error('No GitHub Personal Access Token configured.');
+
+  const repo = 'deepakraaaj/Resume-warehouse';
+  const url = `https://api.github.com/repos/${repo}/contents/${filepath}`;
+
+  // Get current file sha
+  let sha = undefined;
+  try {
+    const getRes = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
+    }
+  } catch {}
+
+  // UTF-8 to Base64
+  const utf8Bytes = new TextEncoder().encode(content);
+  let binary = '';
+  utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+  const base64Content = btoa(binary);
+
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: commitMessage,
+      content: base64Content,
+      sha: sha,
+      branch: 'main'
+    })
+  });
+
+  if (!putRes.ok) {
+    const errData = await putRes.json();
+    throw new Error(errData.message || 'GitHub API error');
+  }
+
+  return await putRes.json();
 }
 
 // Download file utility for browser client
@@ -1016,6 +1077,11 @@ function openGitModal() {
           <span style="color: var(--text-muted); font-size: 11px;">${c.timeAgo}</span>
         </div>
       `).join('');
+    }
+
+    const patInput = document.getElementById('githubPatInput');
+    if (patInput) {
+      patInput.value = localStorage.getItem('github_pat') || '';
     }
 
     elements.gitModal.classList.remove('hidden');
@@ -1175,6 +1241,21 @@ function setupEventListeners() {
   const btnPrintPdf = document.getElementById('btnPrintPdf');
   if (btnPrintPdf) {
     btnPrintPdf.addEventListener('click', printEditorPreview);
+  }
+
+  const btnSavePat = document.getElementById('btnSaveGithubPat');
+  const patInput = document.getElementById('githubPatInput');
+  if (btnSavePat && patInput) {
+    btnSavePat.addEventListener('click', () => {
+      const val = patInput.value.trim();
+      if (val) {
+        localStorage.setItem('github_pat', val);
+        showToast('✓ GitHub Personal Access Token saved in browser!', 'success');
+      } else {
+        localStorage.removeItem('github_pat');
+        showToast('GitHub Personal Access Token cleared.', 'info');
+      }
+    });
   }
 }
 

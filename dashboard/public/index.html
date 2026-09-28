@@ -303,6 +303,16 @@
           <div class="commit-hint">Standard conventional commits (feat, fix, style, docs) recommended.</div>
         </div>
 
+        <!-- GitHub Cloud Sync & CI Token (For Vercel) -->
+        <div class="git-status-section" style="margin-top: 10px;">
+          <label for="githubPatInput" class="section-label">GITHUB PAT (OPTIONAL FOR 1-CLICK COMMITS ON VERCEL):</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <input type="password" id="githubPatInput" class="field-input" placeholder="ghp_... (Stored safely in browser localStorage)" style="flex: 1;">
+            <button class="btn btn-outline" id="btnSaveGithubPat">Save Token</button>
+          </div>
+          <div class="commit-hint">Allows committing changes directly from Vercel to <code>deepakraaaj/Resume-warehouse</code>, triggering the GitHub Actions A4 PDF compiler automatically!</div>
+        </div>
+
         <!-- Recent Commit Log -->
         <div class="recent-commits-section">
           <div class="section-label">RECENT COMMITS:</div>
