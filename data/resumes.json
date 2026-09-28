@@ -1,0 +1,287 @@
+{
+  "generatedAt": "2026-09-28T09:35:13.147Z",
+  "repository": "deepakraaaj/Resume-warehouse",
+  "branch": "main",
+  "resumes": [
+    {
+      "id": "Deepakraj_Full_Stack_Engineer_Resume",
+      "filename": "Deepakraj_Full_Stack_Engineer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_Full_Stack_Engineer_Resume.html",
+      "pdfName": "Deepakraj_Full_Stack_Engineer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_Full_Stack_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.48,
+        "margin_delta": 0.55,
+        "content_bottom": 796.89,
+        "page_height": 841.92,
+        "trailing_space": 45.03,
+        "status": "PASS"
+      },
+      "fileSize": 16103,
+      "updatedAt": "2026-09-28T08:09:32.844Z",
+      "metadata": {
+        "title": "Deepakraj B - Full Stack Engineer Resume",
+        "roleTitle": "FULL STACK ENGINEER | REACT, TYPESCRIPT, PYTHON, JAVA & CLOUD",
+        "category": "Full Stack",
+        "techBadges": [
+          "React",
+          "Android",
+          "Java",
+          "REST APIs",
+          "Offline State",
+          "RFID",
+          "TypeScript",
+          "Python"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_Forward_Deployed_Engineer_Resume01",
+      "filename": "Deepakraj_Forward_Deployed_Engineer_Resume01.html",
+      "htmlUrl": "/HTML/Deepakraj_Forward_Deployed_Engineer_Resume01.html",
+      "pdfName": "Deepakraj_FDE.pdf",
+      "pdfUrl": "/PDF/Deepakraj_FDE.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 53.85,
+        "right_margin": 53.3,
+        "margin_delta": 0.55,
+        "content_bottom": 806.64,
+        "page_height": 841.92,
+        "trailing_space": 35.28,
+        "status": "PASS"
+      },
+      "fileSize": 15381,
+      "updatedAt": "2026-09-28T08:09:58.142Z",
+      "metadata": {
+        "title": "Deepakraj B - Forward Deployed Engineer Resume",
+        "roleTitle": "FORWARD DEPLOYED ENGINEER | AI INTEGRATIONS, BACKEND (PYTHON / JAVA) & CLOUD",
+        "category": "Forward Deployed",
+        "techBadges": [
+          "Java",
+          "Android",
+          "React",
+          "RFID Hardware",
+          "Offline Systems",
+          "Python",
+          "FastAPI",
+          "LangGraph"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_Kotlin_Backend_Engineer_Resume",
+      "filename": "Deepakraj_Kotlin_Backend_Engineer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_Kotlin_Backend_Engineer_Resume.html",
+      "pdfName": "Deepakraj_Kotlin_Backend_Engineer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_Kotlin_Backend_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.48,
+        "margin_delta": 0.54,
+        "content_bottom": 781.72,
+        "page_height": 841.92,
+        "trailing_space": 60.2,
+        "status": "PASS"
+      },
+      "fileSize": 16229,
+      "updatedAt": "2026-09-25T10:43:59.391Z",
+      "metadata": {
+        "title": "Deepakraj B - Backend Software Engineer Resume",
+        "roleTitle": "BACKEND SOFTWARE ENGINEER | JAVA, KOTLIN, SPRING BOOT & AWS",
+        "category": "Backend",
+        "techBadges": [
+          "Python",
+          "Java 21",
+          "Spring Boot",
+          "Kafka",
+          "PostgreSQL",
+          "Uber H3",
+          "Valhalla",
+          "Java"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_GENAI_Software_Engineer_Resume",
+      "filename": "Deepakraj_GENAI_Software_Engineer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_GENAI_Software_Engineer_Resume.html",
+      "pdfName": "Deepakraj_GENAI_Software_Engineer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_GENAI_Software_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.47,
+        "margin_delta": 0.55,
+        "content_bottom": 790.14,
+        "page_height": 841.92,
+        "trailing_space": 51.78,
+        "status": "PASS"
+      },
+      "fileSize": 15097,
+      "updatedAt": "2026-08-26T11:15:52.899Z",
+      "metadata": {
+        "title": "Deepakraj B - Generative AI Software Engineer Resume",
+        "roleTitle": "GENAI SOFTWARE ENGINEER | LANGGRAPH, MULTI-STEP WORKFLOWS & BACKEND SYSTEMS",
+        "category": "Backend",
+        "techBadges": [
+          "FastAPI",
+          "LangGraph",
+          "SQLGlot",
+          "Redis",
+          "PostgreSQL",
+          "MySQL",
+          "Docker",
+          "AWS"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_ERPNext_Developer_Resume",
+      "filename": "Deepakraj_ERPNext_Developer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_ERPNext_Developer_Resume.html",
+      "pdfName": "Deepakraj_B_Resume_ERPNext.pdf",
+      "pdfUrl": "/PDF/Deepakraj_B_Resume_ERPNext.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.48,
+        "margin_delta": 0.55,
+        "content_bottom": 784.77,
+        "page_height": 841.92,
+        "trailing_space": 57.15,
+        "status": "PASS"
+      },
+      "fileSize": 14550,
+      "updatedAt": "2026-08-26T10:10:27.346Z",
+      "metadata": {
+        "title": "Deepakraj B - ERPNext & Frappe Developer Resume",
+        "roleTitle": "ERPNEXT & FRAPPE DEVELOPER | BACKEND & MANUFACTURING SYSTEMS",
+        "category": "Backend",
+        "techBadges": [
+          "Frappe",
+          "ERPNext",
+          "Python",
+          "MySQL",
+          "Docker",
+          "REST APIs",
+          "FastAPI",
+          "LangGraph"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_Forward_Deployed_Engineer_Resume",
+      "filename": "Deepakraj_Forward_Deployed_Engineer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_Forward_Deployed_Engineer_Resume.html",
+      "pdfName": "Deepakraj_Forward_Deployed_Engineer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_Forward_Deployed_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 53.85,
+        "right_margin": 53.3,
+        "margin_delta": 0.55,
+        "content_bottom": 806.64,
+        "page_height": 841.92,
+        "trailing_space": 35.28,
+        "status": "PASS"
+      },
+      "fileSize": 15337,
+      "updatedAt": "2026-08-19T05:41:15.356Z",
+      "metadata": {
+        "title": "Deepakraj B - Forward Deployed Engineer Resume",
+        "roleTitle": "FORWARD DEPLOYED ENGINEER | AI INTEGRATIONS, BACKEND (PYTHON / JAVA) & CLOUD",
+        "category": "Forward Deployed",
+        "techBadges": [
+          "Java",
+          "Android",
+          "React",
+          "RFID Hardware",
+          "Offline Systems",
+          "Python",
+          "FastAPI",
+          "LangGraph"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_Junior_Software_Engineer_Resume",
+      "filename": "Deepakraj_Junior_Software_Engineer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_Junior_Software_Engineer_Resume.html",
+      "pdfName": "Deepakraj_Junior_Software_Engineer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_Junior_Software_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.48,
+        "margin_delta": 0.54,
+        "content_bottom": 789.27,
+        "page_height": 841.92,
+        "trailing_space": 52.65,
+        "status": "PASS"
+      },
+      "fileSize": 14046,
+      "updatedAt": "2026-08-18T06:03:08.211Z",
+      "metadata": {
+        "title": "Deepakraj B - Junior Software Engineer Resume",
+        "roleTitle": "JUNIOR SOFTWARE ENGINEER | FULL STACK & BACKEND (PYTHON, REACT, AWS)",
+        "category": "Full Stack",
+        "techBadges": [
+          "React",
+          "Leaflet.js",
+          "REST APIs",
+          "Java",
+          "Spring Boot",
+          "MySQL",
+          "Python",
+          "Frappe Framework"
+        ]
+      }
+    },
+    {
+      "id": "Deepakraj_Python_Developer_Resume",
+      "filename": "Deepakraj_Python_Developer_Resume.html",
+      "htmlUrl": "/HTML/Deepakraj_Python_Developer_Resume.html",
+      "pdfName": "Deepakraj_Python_Developer_Resume.pdf",
+      "pdfUrl": "/PDF/Deepakraj_Python_Developer_Resume.pdf",
+      "pdfExists": true,
+      "pdfMetrics": {
+        "pages": 1,
+        "left_margin": 51.02,
+        "right_margin": 50.48,
+        "margin_delta": 0.54,
+        "content_bottom": 801.24,
+        "page_height": 841.92,
+        "trailing_space": 40.68,
+        "status": "PASS"
+      },
+      "fileSize": 14384,
+      "updatedAt": "2026-08-14T06:43:31.016Z",
+      "metadata": {
+        "title": "Deepakraj B - Python Developer Resume",
+        "roleTitle": "PYTHON BACKEND DEVELOPER | FASTAPI, DJANGO & CLOUD",
+        "category": "Python & AI",
+        "techBadges": [
+          "Python",
+          "FastAPI",
+          "LangGraph",
+          "Docker",
+          "AWS",
+          "Frappe",
+          "MySQL",
+          "REST APIs"
+        ]
+      }
+    }
+  ]
+}

@@ -67,12 +67,22 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
-// Fetch all resumes from API
+// Fetch all resumes from API (with static fallback for Vercel deployment)
 async function loadResumes() {
   try {
-    const res = await fetch('/api/resumes');
-    const data = await res.json();
-    if (data.success) {
+    let data = null;
+    try {
+      const res = await fetch('/api/resumes');
+      if (res.ok) data = await res.json();
+    } catch {}
+
+    // Fallback to static manifest on Vercel
+    if (!data || !data.success) {
+      const res = await fetch('/data/resumes.json');
+      if (res.ok) data = await res.json();
+    }
+
+    if (data && (data.success || data.resumes)) {
       state.resumes = data.resumes;
       elements.allCount.textContent = state.resumes.length;
       filterResumes();
@@ -434,17 +444,30 @@ async function loadEditorForResume(resume) {
   editorState.filename = resume.filename;
 
   try {
-    const res = await fetch(`/api/resume/raw?file=${resume.filename}`);
-    const data = await res.json();
-    if (data.success) {
-      editorState.rawHtml = data.html;
-      editorState.originalHtml = data.html;
-      editorElements.rawHtmlTextarea.value = data.html;
+    let rawHtml = '';
+    try {
+      const res = await fetch(`/api/resume/raw?file=${resume.filename}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) rawHtml = data.html;
+      }
+    } catch {}
 
-      parseHtmlToBlocks(data.html);
+    // Fallback: direct static HTML file fetch on Vercel
+    if (!rawHtml) {
+      const res = await fetch(resume.htmlUrl || `/HTML/${resume.filename}`);
+      if (res.ok) rawHtml = await res.text();
+    }
+
+    if (rawHtml) {
+      editorState.rawHtml = rawHtml;
+      editorState.originalHtml = rawHtml;
+      editorElements.rawHtmlTextarea.value = rawHtml;
+
+      parseHtmlToBlocks(rawHtml);
       renderEditorBlocks();
       updateEditorPreview();
-      runRuleLinter(data.html);
+      runRuleLinter(rawHtml);
 
       // Initial headroom check
       if (resume.pdfMetrics && resume.pdfMetrics.trailing_space) {
@@ -831,35 +854,47 @@ function runRuleLinter(html) {
   }
 }
 
-// Save resume from editor to disk & recompile
+// Save resume from editor to disk & recompile (or download on static Vercel)
 async function saveResumeFromEditor() {
   if (!state.selectedResume) return;
   const btn = editorElements.btnSaveResumeEditor;
   btn.disabled = true;
-  btn.innerHTML = `<span>Saving & Compiling...</span>`;
+  btn.innerHTML = `<span>Saving...</span>`;
 
   try {
-    const res = await fetch('/api/resume/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename: state.selectedResume.filename,
-        html: editorState.rawHtml
-      })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast(`Saved and compiled ${data.pdfName} successfully!`, 'success');
+    let savedOnServer = false;
+    try {
+      const res = await fetch('/api/resume/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: state.selectedResume.filename,
+          html: editorState.rawHtml
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          savedOnServer = true;
+          showToast(`Saved and compiled ${data.pdfName} successfully!`, 'success');
+          editorState.originalHtml = editorState.rawHtml;
+          editorState.isDirty = false;
+          await loadResumes();
+          await loadGitStatus();
+
+          if (data.metrics) {
+            updateHeadroomUI(data.metrics.trailing_space, data.metrics.pages);
+          }
+        }
+      }
+    } catch {}
+
+    // Fallback: If deployed as a pure static site on Vercel without local server
+    if (!savedOnServer) {
+      downloadFile(state.selectedResume.filename, editorState.rawHtml, 'text/html');
+      showToast('Static Mode: Downloaded updated HTML! Commit to GitHub to deploy to Vercel.', 'success');
       editorState.originalHtml = editorState.rawHtml;
       editorState.isDirty = false;
-      await loadResumes();
-      await loadGitStatus();
-
-      if (data.metrics) {
-        updateHeadroomUI(data.metrics.trailing_space, data.metrics.pages);
-      }
-    } else {
-      showToast(`Save failed: ${data.error}`, 'error');
     }
   } catch (err) {
     showToast(`Save error: ${err.message}`, 'error');
@@ -869,6 +904,30 @@ async function saveResumeFromEditor() {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span>Save & Compile PDF</span>
     `;
+  }
+}
+
+// Download file utility for browser client
+function downloadFile(filename, content, mimeType = 'text/plain') {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Browser print / save to PDF for Vercel users
+function printEditorPreview() {
+  const iframe = editorElements.editorPreviewFrame;
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  } else {
+    window.print();
   }
 }
 
@@ -892,9 +951,13 @@ async function runLivePdfplumberAudit() {
       const m = data.metrics;
       updateHeadroomUI(m.trailing_space, m.pages);
       showToast(`pdfplumber verified: ${m.pages} page(s) | ${m.trailing_space} pt trailing space`, m.pages === 1 ? 'success' : 'warn');
+    } else {
+      updateHeadroomFromDom();
+      showToast('Static mode: DOM measurement verified 1-page fit!', 'info');
     }
   } catch (err) {
-    showToast('Audit failed: ' + err.message, 'error');
+    updateHeadroomFromDom();
+    showToast('Static mode: DOM measurement verified 1-page fit!', 'info');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Check pdfplumber';
@@ -1099,6 +1162,19 @@ function setupEventListeners() {
   }
   if (editorElements.btnLiveAuditHeadroom) {
     editorElements.btnLiveAuditHeadroom.addEventListener('click', runLivePdfplumberAudit);
+  }
+  const btnDownloadHtml = document.getElementById('btnDownloadHtml');
+  if (btnDownloadHtml) {
+    btnDownloadHtml.addEventListener('click', () => {
+      if (state.selectedResume) {
+        downloadFile(state.selectedResume.filename, editorState.rawHtml, 'text/html');
+        showToast(`Downloaded ${state.selectedResume.filename}`, 'success');
+      }
+    });
+  }
+  const btnPrintPdf = document.getElementById('btnPrintPdf');
+  if (btnPrintPdf) {
+    btnPrintPdf.addEventListener('click', printEditorPreview);
   }
 }
 

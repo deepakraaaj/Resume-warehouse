@@ -4,6 +4,7 @@
   "description": "Resume warehouse, A4 layout verification, and interactive management dashboard",
   "type": "module",
   "scripts": {
+    "build": "node scripts/generate_manifest.mjs",
     "start": "node dashboard/server.mjs",
     "dashboard": "node dashboard/server.mjs",
     "compile": "python3 scripts/compile_resumes.py",
