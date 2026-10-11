@@ -250,9 +250,9 @@ function serveStatic(pathname, res) {
   try { decoded = decodeURIComponent(pathname); } catch { decoded = ''; }
 
   let target;
-  if (decoded === '/hunt.html' || decoded === '/hunt') { res.writeHead(302, { Location: '/hunt/' }); res.end(); return; }
-  // Job Hunt is a single-page app: unknown paths under /hunt/ load its index.
-  if (decoded.startsWith('/hunt/') && !path.extname(decoded)) decoded = '/hunt/index.html';
+  if (decoded === '/hunt.html') { res.writeHead(302, { Location: '/' }); res.end(); return; }
+  // The app is a single page: any path without a file extension loads its index.
+  if (!/^\/(HTML|PDF|data)\//.test(decoded) && !path.extname(decoded)) decoded = '/index.html';
   if (decoded === '/' || decoded === '/index.html') target = path.join(PUBLIC_DIR, 'index.html');
   else if (/^\/(HTML|PDF|data)\//.test(decoded)) target = path.join(ROOT, decoded);
   else target = path.join(PUBLIC_DIR, decoded);

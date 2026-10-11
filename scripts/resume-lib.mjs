@@ -4,7 +4,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { lint } from '../dashboard/public/rules.js';
+import { lint } from '../lib/rules.js';
 
 const run = promisify(execFile);
 
@@ -245,10 +245,20 @@ export async function measureDraft(html) {
   }
 }
 
+// The first Python that has pdfplumber (system python3 can be upgraded without it). RESUME_PYTHON overrides.
+let pythonBin;
+async function python() {
+  if (pythonBin) return pythonBin;
+  for (const bin of [process.env.RESUME_PYTHON, 'python3', 'python3.13', 'python3.12', 'python3.11', 'python3.10', 'python'].filter(Boolean)) {
+    try { await run(bin, ['-c', 'import pdfplumber'], { timeout: 15_000 }); return (pythonBin = bin); } catch { /* try the next one */ }
+  }
+  return (pythonBin = 'python3');
+}
+
 export async function measurePdf(pdfPath) {
   if (!fs.existsSync(pdfPath)) return null;
   try {
-    const { stdout } = await run('python3', ['-c', MEASURE_PY, pdfPath], { timeout: 30_000 });
+    const { stdout } = await run(await python(), ['-c', MEASURE_PY, pdfPath], { timeout: 30_000 });
     return JSON.parse(stdout);
   } catch {
     return null;
@@ -266,7 +276,7 @@ with pdfplumber.open(sys.argv[1]) as pdf:
 // Plain text in reading order, roughly what an applicant tracking system parses out of the PDF.
 export async function extractPdfText(pdfPath) {
   if (!fs.existsSync(pdfPath)) return null;
-  const { stdout } = await run('python3', ['-c', EXTRACT_PY, pdfPath], { timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
+  const { stdout } = await run(await python(), ['-c', EXTRACT_PY, pdfPath], { timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
   return JSON.parse(stdout);
 }
 

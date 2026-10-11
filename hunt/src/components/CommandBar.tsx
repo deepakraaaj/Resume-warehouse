@@ -34,7 +34,7 @@ export function CommandBar() {
                   <Command.Item value="add a company new" onSelect={() => go('/new')} className={item}><Plus className="h-4 w-4" />Add a company</Command.Item>
                 </Command.Group>
                 <Command.Group heading="Go to" className="px-1 text-xs text-ink-3">
-                  {[['/', 'Today'], ['/progress', 'Progress'], ['/sprint', '30-day sprint'], ['/profile', 'My profile'], ['/offers', 'Offers'], ['/status', 'AI status']].map(([to, l]) => (
+                  {[['/', 'Today'], ['/resumes', 'Resumes'], ['/progress', 'Progress'], ['/sprint', '30-day sprint'], ['/profile', 'My profile'], ['/offers', 'Offers'], ['/status', 'AI status']].map(([to, l]) => (
                     <Command.Item key={to} value={`go ${l}`} onSelect={() => go(to)} className={item}><ArrowRight className="h-4 w-4" />{l}</Command.Item>
                   ))}
                 </Command.Group>

@@ -1,12 +1,14 @@
 import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import './index.css';
 import { AppProvider } from './lib/state';
 import { Shell } from './components/Shell';
 import Today from './pages/Today';
 import { Companies, NewCompany } from './pages/Companies';
 import { Spinner } from './components/ui';
+import { AuthGate } from './pages/Auth';
+import { OverlayProvider } from './components/Overlay';
 
 const Company = lazy(() => import('./pages/Company'));
 const Studio = lazy(() => import('./pages/Studio'));
@@ -18,6 +20,17 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Offers = lazy(() => import('./pages/Offers'));
 const Status = lazy(() => import('./pages/Status'));
 const More = lazy(() => import('./pages/More'));
+const Resumes = lazy(() => import('./resume/Resumes'));
+
+// Old links: /?r=File opened a resume; /hunt/... was the earlier Job Hunt address.
+function Home() {
+  const r = new URLSearchParams(useLocation().search).get('r');
+  return r ? <Navigate to={`/resumes/${encodeURIComponent(r)}`} replace /> : <Today />;
+}
+function LegacyHunt() {
+  const rest = useParams()['*'] ?? '';
+  return <Navigate to={`/${rest}`} replace />;
+}
 
 function App() {
   const location = useLocation();
@@ -25,7 +38,9 @@ function App() {
     <Shell location={location}>
       <Suspense fallback={<div className="flex items-center gap-2 text-ink-2"><Spinner />Loading…</div>}>
         <Routes location={location}>
-          <Route path="/" element={<Today />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/resumes/:file?" element={<Resumes />} />
+          <Route path="/hunt/*" element={<LegacyHunt />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/new" element={<NewCompany />} />
           <Route path="/c/:id/:step?" element={<Company />} />
@@ -46,5 +61,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode><BrowserRouter basename="/hunt"><AppProvider><App /></AppProvider></BrowserRouter></StrictMode>,
+  <StrictMode><BrowserRouter><AuthGate><AppProvider><OverlayProvider><App /></OverlayProvider></AppProvider></AuthGate></BrowserRouter></StrictMode>,
 );

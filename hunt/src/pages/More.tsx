@@ -5,7 +5,7 @@ export default function More() {
   return (
     <div className="space-y-3"><h1 className="mb-4 text-3xl font-bold">More</h1>
       {items.map(([to, t, d, Icon]) => <Link key={to} to={to} className="glass flex items-center gap-4 p-4"><Icon className="h-5 w-5 text-violet" /><div><p className="font-semibold">{t}</p><p className="text-sm text-ink-3">{d}</p></div></Link>)}
-      <a href="/" className="glass flex items-center gap-4 p-4"><FileText className="h-5 w-5 text-teal" /><div><p className="font-semibold">Resume Desk</p><p className="text-sm text-ink-3">Edit your resumes</p></div></a>
+      <Link to="/progress" className="glass flex items-center gap-4 p-4"><FileText className="h-5 w-5 text-teal" /><div><p className="font-semibold">Progress</p><p className="text-sm text-ink-3">Rings, skill ratings, bests</p></div></Link>
     </div>
   );
 }

@@ -48,6 +48,6 @@ Portfolio/
 # Job Hunt local data
 .data/
 
-# Job Hunt app build output (built on deploy)
-dashboard/public/hunt/
+# App build output (built from hunt/ on deploy)
+dashboard/public/
 hunt/node_modules/

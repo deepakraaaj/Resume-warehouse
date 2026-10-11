@@ -182,7 +182,7 @@ function Apply({ t, reload }: { t: Json; reload: () => Promise<void> }) {
             <span className="text-sm text-ink-3">Copy a resume for {t.company}:</span>
             <select className="input w-auto max-w-full py-1.5 text-sm" value={base} onChange={e => setBase(e.target.value)}>{resumes.map(r => <option key={r.file} value={r.file}>{r.file.replace(/\.html$/, '').replace(/_/g, ' ')}</option>)}</select>
             <button className="btn-ghost" disabled={!base || !!busy} onClick={() => run('copy', async () => { const out = await post('tailor-copy', { id: t.id, from: base }); toast(`Created ${out.file.replace(/\.html$/, '')}.`); await reload(); })}>Create copy</button>
-            {t.resumeFile && <a className="btn-quiet" href={`/?r=${encodeURIComponent(t.resumeFile.replace(/\.html$/, ''))}`}>Open it<ExternalLink className="h-3.5 w-3.5" /></a>}
+            {t.resumeFile && <Link className="btn-quiet" to={`/resumes/${encodeURIComponent(t.resumeFile.replace(/\.html$/, ''))}`}>Open it<ExternalLink className="h-3.5 w-3.5" /></Link>}
           </div>
         </Card>
       )}

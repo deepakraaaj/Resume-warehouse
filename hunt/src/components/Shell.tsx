@@ -1,22 +1,25 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink, type Location } from 'react-router-dom';
-import { Activity, Building2, Gauge, Home, Mic, MoreHorizontal, Search, Settings2, Sparkles, User, Wallet, CalendarDays, Command } from 'lucide-react';
+import { Activity, Building2, Gauge, Home, Mic, MoreHorizontal, Search, Settings2, Sparkles, User, Wallet, CalendarDays, Command, FileText, LogOut, Download } from 'lucide-react';
+import { useAuth } from '../pages/Auth';
 import type { ReactNode } from 'react';
 import { useApp } from '../lib/state';
 import { cx } from '../lib/util';
 import { CommandBar } from './CommandBar';
 
 const NAV = [
-  ['/', 'Today', Home], ['/companies', 'Companies', Building2], ['/practice', 'Practice', Mic], ['/progress', 'Progress', Activity],
+  ['/', 'Today', Home], ['/resumes', 'Resumes', FileText], ['/companies', 'Companies', Building2], ['/practice', 'Practice', Mic], ['/progress', 'Progress', Activity],
   ['/ask', 'Ask anything', Sparkles], ['/sprint', '30-day sprint', CalendarDays], ['/profile', 'My profile', User], ['/offers', 'Offers', Wallet], ['/status', 'AI status', Gauge],
 ] as const;
-const TABS = [['/', 'Today', Home], ['/companies', 'Companies', Building2], ['/practice', 'Practice', Mic], ['/progress', 'Progress', Activity], ['/more', 'More', MoreHorizontal]] as const;
+const TABS = [['/', 'Today', Home], ['/resumes', 'Resumes', FileText], ['/companies', 'Companies', Building2], ['/practice', 'Practice', Mic], ['/more', 'More', MoreHorizontal]] as const;
 
 export function Shell({ children, location }: { children: ReactNode; location: Location }) {
   const { targets, status, toasts, setPalette } = useApp();
   const llm = (status?.budgets ?? []).filter((b: { id: string }) => !b.id.startsWith('search:') && !b.id.includes('whisper') && !b.id.includes('orpheus'));
   const ready = llm.filter((b: { state: string }) => b.state === 'ready').length;
   const studio = location.pathname.startsWith('/studio');
+  const wide = location.pathname.startsWith('/resumes');
+  const { account, signOut } = useAuth();
   return (
     <div className="relative min-h-dvh">
       <div className="aurora"><i /><i /><i /></div><div className="grain" />
@@ -49,13 +52,19 @@ export function Shell({ children, location }: { children: ReactNode; location: L
           <NavLink to="/status" className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-ink-2 hover:bg-white/[.04]">
             <span className={cx('h-2 w-2 rounded-full', !llm.length ? 'bg-ink-3' : ready === 0 ? 'bg-rose' : ready < llm.length / 2 ? 'bg-amber' : 'bg-teal')} />{llm.length ? `${ready} of ${llm.length} AI models ready` : 'Checking AI…'}
           </NavLink>
-          <a href="/" className="px-3 pt-1 text-sm text-ink-3 hover:text-ink">Open Resume Desk</a>
+          {account && (
+            <div className="mt-2 flex items-center gap-2 border-t border-white/[.06] px-3 pt-3 text-xs text-ink-3">
+              <span className="min-w-0 flex-1 truncate" title={account.email}>{account.email}</span>
+              <a href="/api/export" download className="rounded p-1 hover:text-ink" title="Download all resumes"><Download className="h-4 w-4" /></a>
+              <button onClick={signOut} className="rounded p-1 hover:text-ink" title="Sign out"><LogOut className="h-4 w-4" /></button>
+            </div>
+          )}
         </aside>
       )}
       <main className={cx('relative z-10', studio ? '' : 'lg:pl-64')}>
         <AnimatePresence mode="wait">
-          <motion.div key={location.pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className={studio ? '' : 'mx-auto max-w-6xl px-4 pb-28 pt-8 sm:px-8 lg:pb-16 lg:pt-12'}>
+          <motion.div key={wide ? 'resumes' : location.pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className={studio ? '' : wide ? 'px-4 pb-24 pt-6 sm:px-8 lg:pb-0 lg:pt-10' : 'mx-auto max-w-6xl px-4 pb-28 pt-8 sm:px-8 lg:pb-16 lg:pt-12'}>
             {children}
           </motion.div>
         </AnimatePresence>

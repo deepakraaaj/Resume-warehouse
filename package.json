@@ -10,7 +10,9 @@
     "add-user": "node --env-file=.env.local scripts/add-user.mjs",
     "import-local": "node --env-file=.env.local scripts/import-local.mjs",
     "test": "node --test test/*.test.mjs",
-    "ai-check": "node --env-file=.env.local scripts/ai-smoke.mjs --search"
+    "ai-check": "node --env-file=.env.local scripts/ai-smoke.mjs --search",
+    "prestart": "npm install --prefix hunt --no-audit --no-fund && npm run build --prefix hunt",
+    "dev:app": "npm run dev --prefix hunt"
   },
   "dependencies": {
     "@sparticuz/chromium": "^153.0.0",

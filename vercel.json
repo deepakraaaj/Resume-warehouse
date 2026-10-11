@@ -24,10 +24,6 @@
       "destination": "/api/app?route=pdf&name=:file"
     },
     {
-      "source": "/hunt/:path*",
-      "destination": "/hunt/index.html"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -35,12 +31,17 @@
   "redirects": [
     {
       "source": "/hunt.html",
-      "destination": "/hunt/",
+      "destination": "/",
       "permanent": false
     },
     {
       "source": "/hunt",
-      "destination": "/hunt/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/hunt/:path*",
+      "destination": "/:path*",
       "permanent": false
     }
   ]
