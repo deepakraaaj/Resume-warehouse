@@ -149,7 +149,7 @@ export function HistoryPanel({ resume, dirty, previewHash, onPreview, mode, refr
   );
 }
 
-// Brings Job Hunt in: pick a company you're targeting and paste its tailored summary and bullets into the page.
+// Brings company prep in: pick a company you're targeting and paste its tailored summary and bullets into the page.
 export function TailorPanel({ resume }: { resume: Json | null }) {
   const { targets, toast } = useApp();
   const [id, setId] = useState<string>(() => targets.find(t => t.id)?.id ?? '');
@@ -157,7 +157,7 @@ export function TailorPanel({ resume }: { resume: Json | null }) {
   useEffect(() => { if (!id && targets[0]) setId(targets[0].id); }, [targets, id]);
   useEffect(() => { setT(null); if (id) get('target', { id }).then(setT).catch(() => {}); }, [id]);
   const copy = (s: string) => navigator.clipboard.writeText(s).then(() => toast('Copied. Click into the page and paste.')).catch(() => toast('Copy failed.', true));
-  if (!targets.length) return <div className="space-y-3 text-sm text-ink-2"><p>Add the companies you’re applying to in Job Hunt. Their tailored summary and bullets show up here, ready to paste into this resume.</p><Link to="/new" className="btn-primary">Add a company</Link></div>;
+  if (!targets.length) return <div className="space-y-3 text-sm text-ink-2"><p>Add the companies you’re applying to in Companies. Their tailored summary and bullets show up here, ready to paste into this resume.</p><Link to="/new" className="btn-primary">Add a company</Link></div>;
   return (
     <div className="space-y-4">
       <label className="flex flex-col gap-1.5 text-sm"><span className="label">Tailor this resume for</span><select className="input py-2" value={id} onChange={e => setId(e.target.value)}>{targets.map(x => <option key={x.id} value={x.id}>{x.company} · {x.role}</option>)}</select></label>
@@ -169,7 +169,7 @@ export function TailorPanel({ resume }: { resume: Json | null }) {
           <div><div className="mb-1 flex items-center justify-between"><span className="label">Summary</span><button className="btn-quiet px-2 py-1 text-xs" onClick={() => copy(t.fit.summary)}><Copy className="h-3.5 w-3.5" />Copy</button></div><p className="rounded-xl bg-night-900/60 p-3">{t.fit.summary}</p></div>
           <div><span className="label">Bullets</span><ul className="mt-1 space-y-1.5">{arr<string>(t.fit.bullets).map((b, i) => <li key={i} className="group flex gap-2 rounded-xl bg-night-900/60 p-2.5"><span className="flex-1">{b}</span><button className="opacity-50 group-hover:opacity-100" aria-label="Copy bullet" onClick={() => copy(b)}><Copy className="h-3.5 w-3.5" /></button></li>)}</ul></div>
           {arr(t.fit.keywords).length > 0 && <div><span className="label">Keywords to work in, if true</span><div className="mt-1 flex flex-wrap gap-1">{arr<string>(t.fit.keywords).map(k => <Chip key={k} tone="violet">{k}</Chip>)}</div></div>}
-          <Link to={`/c/${t.id}/apply`} className="text-violet hover:underline">Open {t.company} in Job Hunt</Link>
+          <Link to={`/c/${t.id}/apply`} className="text-violet hover:underline">Open {t.company}</Link>
           {resume && t.resumeFile === resume.file && <p className="text-xs text-teal">This resume is the tailored copy for {t.company}.</p>}
         </div>
       )}

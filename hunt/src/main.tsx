@@ -22,7 +22,7 @@ const Status = lazy(() => import('./pages/Status'));
 const More = lazy(() => import('./pages/More'));
 const Resumes = lazy(() => import('./resume/Resumes'));
 
-// Old links: /?r=File opened a resume; /hunt/... was the earlier Job Hunt address.
+// Old links: /?r=File opened a resume; /hunt/... was the earlier address.
 function Home() {
   const r = new URLSearchParams(useLocation().search).get('r');
   return r ? <Navigate to={`/resumes/${encodeURIComponent(r)}`} replace /> : <Today />;

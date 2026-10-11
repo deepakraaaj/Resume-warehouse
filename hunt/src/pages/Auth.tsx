@@ -40,12 +40,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
     <div className="relative grid min-h-dvh place-items-center px-4">
       <div className="aurora"><i /><i /><i /></div>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-hi relative z-10 w-full max-w-sm p-7 shadow-glow">
-        <div className="mb-6 flex items-center gap-2.5 font-display text-xl font-bold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet to-teal"><span className="h-3 w-3 rounded-full bg-amber" /></span>Job Hunt</div>
+        <div className="mb-6 flex items-center gap-2.5 font-display text-xl font-bold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet to-teal"><span className="h-3 w-3 rounded-full bg-amber" /></span>Workbench</div>
         {phase === 'check' && <div className="flex items-center gap-2 text-ink-2"><Spinner />Opening your desk…</div>}
         {phase === 'error' && <><p className="text-rose">{error}</p><button className="btn-primary mt-4" onClick={check}>Try again</button></>}
         {phase === 'signIn' && (
           <form className="space-y-4" onSubmit={submit(async () => { const d = await post('/api/login', { email: f.email, password: f.password }); setF({ ...f, password: '' }); if (d.mustChangePassword) setPhase('password'); else await check(); })}>
-            <div><h1 className="text-2xl font-bold">Welcome back</h1><p className="text-sm text-ink-2">Sign in to your resumes and job hunt.</p></div>
+            <div><h1 className="text-2xl font-bold">Welcome back</h1><p className="text-sm text-ink-2">Sign in to continue.</p></div>
             <input className="input" type="email" autoComplete="username" required placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} autoFocus />
             <input className="input" type="password" autoComplete="current-password" required placeholder="Password" value={f.password} onChange={e => setF({ ...f, password: e.target.value })} />
             {error && <p className="text-sm text-rose" role="alert">{error}</p>}

@@ -26,7 +26,7 @@ export function Shell({ children, location }: { children: ReactNode; location: L
       {!studio && (
         <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-white/[.06] bg-night-950/40 px-3 py-5 backdrop-blur-xl lg:flex">
           <NavLink to="/" className="mb-5 flex items-center gap-2.5 px-3 font-display text-lg font-bold">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-violet to-teal shadow-glow"><span className="h-2.5 w-2.5 rounded-full bg-amber" /></span>Job Hunt
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-violet to-teal shadow-glow"><span className="h-2.5 w-2.5 rounded-full bg-amber" /></span>Workbench
           </NavLink>
           <button onClick={() => setPalette(true)} className="mb-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-sm text-ink-3 transition hover:text-ink">
             <Search className="h-4 w-4" />Search or ask<kbd className="ml-auto flex items-center gap-0.5 rounded-md bg-white/10 px-1.5 text-[11px]"><Command className="h-3 w-3" />K</kbd>
