@@ -4,11 +4,13 @@
   "description": "Tailored one-page resumes with an online editor, PDF builder and ATS checks",
   "type": "module",
   "scripts": {
-    "start": "node dashboard/server.mjs",
+    "start": "node --env-file-if-exists=.env.local dashboard/server.mjs",
     "pdf": "node scripts/build.mjs --pdf",
     "build": "node scripts/build.mjs --site",
     "add-user": "node --env-file=.env.local scripts/add-user.mjs",
-    "import-local": "node --env-file=.env.local scripts/import-local.mjs"
+    "import-local": "node --env-file=.env.local scripts/import-local.mjs",
+    "test": "node --test test/*.test.mjs",
+    "ai-check": "node --env-file=.env.local scripts/ai-smoke.mjs --search"
   },
   "dependencies": {
     "@sparticuz/chromium": "^153.0.0",

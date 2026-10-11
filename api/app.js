@@ -2,6 +2,8 @@
 import { currentUser, signIn, sessionCookie, clearCookie, setPassword } from '../lib/auth.mjs';
 import * as cloud from '../lib/cloud.mjs';
 import { zip } from '../lib/zip.mjs';
+import { handlePrep } from '../lib/prep-api.mjs';
+import { visibleText } from '../scripts/resume-lib.mjs';
 
 function send(res, status, body, cookie) {
   res.status(status);
@@ -31,6 +33,25 @@ const POST_ROUTES = {
   archive: (u, b) => cloud.archive(u.id, b),
 };
 
+// What the Job Hunt features need from the resume side: the user's resume texts, and a way to copy one.
+function prepContext(user) {
+  return {
+    uid: user.id,
+    async resumes() {
+      const state = await cloud.loadState(user.id);
+      const out = [];
+      for (const file of Object.keys(state.resumes)) {
+        const html = await cloud.readHtml(user.id, file);
+        if (html) out.push({ file, text: visibleText(html) });
+      }
+      return out;
+    },
+    async createResume({ from, role, company }) {
+      return (await cloud.create(user.id, { from, role, company, group: 'Tailored' })).created;
+    },
+  };
+}
+
 export default async function handler(req, res) {
   const route = String(req.query.route ?? '').replace(/^\/+|\/+$/g, '');
   const post = req.method === 'POST';
@@ -58,6 +79,11 @@ export default async function handler(req, res) {
     if (user.mustChangePassword) return send(res, 403, { error: 'Choose a new password first.', mustChangePassword: true });
 
     if (post && POST_ROUTES[route]) return send(res, 200, await POST_ROUTES[route](user, body));
+
+    if (route.startsWith('prep/')) {
+      const out = await handlePrep(route.slice(5), req.method, body, req.query, prepContext(user));
+      if (out !== undefined) return send(res, 200, out ?? null);
+    }
 
     if (req.method === 'GET') {
       switch (route) {

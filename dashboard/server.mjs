@@ -7,14 +7,16 @@ import {
   ROOT, HTML_DIR, PDF_DIR, listSources, resolveSource, pdfNameFor,
   compilePdf, measurePdf, measureDraft, extractPdfText, describe, readManifest, writeManifest,
   setCompany, setMeta, setRole, newSourceName,
-  readFolders, writeFolders, cleanName, cleanFileName, archiveResume, readMeta,
+  readFolders, writeFolders, cleanName, cleanFileName, archiveResume, readMeta, visibleText,
 } from '../scripts/resume-lib.mjs';
+
+import { handlePrep } from '../lib/prep-api.mjs';
 
 const run = promisify(execFile);
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.PORT) || 4000;
 const PUBLIC_DIR = path.join(ROOT, 'dashboard', 'public');
-const MAX_BODY = 2 * 1024 * 1024;
+const MAX_BODY = 5 * 1024 * 1024;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -270,6 +272,7 @@ const server = http.createServer(async (req, res) => {
   const { pathname, searchParams } = new URL(req.url, `http://${req.headers.host}`);
   const handler = routes[`${req.method} ${pathname}`];
 
+  if (!handler && pathname.startsWith('/api/prep/')) return servePrep(req, res, pathname.slice(10), searchParams);
   if (!handler) {
     if (pathname.startsWith('/api/')) return send(res, 404, { error: 'Unknown endpoint.' });
     return serveStatic(pathname, res);
@@ -288,6 +291,30 @@ const server = http.createServer(async (req, res) => {
     send(res, 400, { error: detail });
   }
 });
+
+// Job Hunt on the local dashboard: one local user, data in .data/, resumes from HTML/.
+const localPrep = {
+  uid: 'local',
+  async resumes() {
+    return listSources().map(file => ({ file, text: visibleText(fs.readFileSync(path.join(HTML_DIR, file), 'utf8')) }));
+  },
+  async createResume({ from, role, company }) {
+    return (await routes['POST /api/create']({ from, role, company, group: 'Tailored' })).created;
+  },
+};
+
+async function servePrep(req, res, route, searchParams) {
+  if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.host ?? '')) return send(res, 403, { error: 'Open the dashboard at http://localhost.' });
+  if (req.method === 'POST' && !isSameOriginJson(req)) return send(res, 403, { error: 'Requests must come from the dashboard itself.' });
+  try {
+    const body = req.method === 'POST' ? await readJson(req) : {};
+    const out = await handlePrep(route, req.method, body, Object.fromEntries(searchParams), localPrep);
+    if (out === undefined) return send(res, 404, { error: 'Unknown endpoint.' });
+    send(res, 200, out ?? null);
+  } catch (err) {
+    send(res, 400, { error: String(err?.message ?? err).split('\n')[0] });
+  }
+}
 
 server.listen(PORT, HOST, () => {
   console.log(`Resume dashboard: http://localhost:${PORT}`);
