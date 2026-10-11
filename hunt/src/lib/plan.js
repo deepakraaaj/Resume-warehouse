@@ -1,3 +1,4 @@
+// @ts-nocheck
 // The 30-day job-switch sprint: weekly themes, daily tasks and mentor notes.
 // Each task is [category, text, minutes, problems solved?, hint?].
 export const START_DEFAULT = "2026-10-12";
