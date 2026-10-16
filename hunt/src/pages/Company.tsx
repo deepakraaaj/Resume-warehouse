@@ -304,10 +304,12 @@ export function Feedback({ fb, compact }: { fb: Json; compact?: boolean }) {
   );
 }
 
+// Kept at module level: defining it inside Notes gave it a new identity each render, which remounted the <details> and snapped it shut.
+const Q = ({ q, children, sub }: { q: string; children: JSX.Element; sub?: string }) => <details className="group border-t border-white/[.06] py-3 first:border-0"><summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-semibold"><span>{q}{sub && <span className="block text-sm font-normal text-ink-3">{sub}</span>}</span><span className="text-ink-3 transition group-open:rotate-45">+</span></summary><div className="mt-2">{children}</div></details>;
+
 function Notes({ t, rebuild, busy }: { t: Json; rebuild: (k: string) => void; busy: boolean }) {
   const kit = t.kit ?? {};
   const src = t.research?.sources;
-  const Q = ({ q, children, sub }: { q: string; children: JSX.Element; sub?: string }) => <details className="group border-t border-white/[.06] py-3 first:border-0"><summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-semibold"><span>{q}{sub && <span className="block text-sm font-normal text-ink-3">{sub}</span>}</span><span className="text-ink-3 transition group-open:rotate-45">+</span></summary><div className="mt-2">{children}</div></details>;
   const sections = KIT_ORDER.filter(k => kit[k]);
   if (!sections.length) return <Empty title="No prep yet">Build the kit above. It takes a few minutes and is written from your own projects.</Empty>;
   return (
