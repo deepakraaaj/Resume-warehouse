@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T11:27:17.970Z",
+  "generatedAt": "2026-11-13T17:21:19.187Z",
   "resumes": [
     {
       "file": "Deepakraj_ERPNext_Developer_Resume.html",
@@ -66,14 +66,14 @@
       "focus": "React, TypeScript, Python, Java & Cloud",
       "company": "",
       "group": "Full Stack",
-      "updatedAt": "2026-09-28T11:02:02.991Z",
-      "pdfUpdatedAt": "2026-09-28T11:02:03.725Z",
+      "updatedAt": "2026-11-11T07:08:34.016Z",
+      "pdfUpdatedAt": "2026-11-11T07:08:35.313Z",
       "metrics": {
         "pages": 1,
         "left": 53.85,
         "right": 53.31,
         "delta": 0.54,
-        "spare": 42.8
+        "spare": 37.55
       },
       "issues": []
     },
@@ -150,6 +150,25 @@
         "right": 50.48,
         "delta": 0.54,
         "spare": 40.68
+      },
+      "issues": []
+    },
+    {
+      "file": "Deepakraj_Software_Engineer_Resume.html",
+      "pdf": "Deepakraj_Software_Engineer_Resume.pdf",
+      "pdfExists": true,
+      "role": "Software Engineer",
+      "focus": "Python Backend, GenAI & Erp",
+      "company": "",
+      "group": "General",
+      "updatedAt": "2026-11-13T17:21:15.813Z",
+      "pdfUpdatedAt": "2026-11-13T17:21:18.876Z",
+      "metrics": {
+        "pages": 1,
+        "left": 51.02,
+        "right": 50.48,
+        "delta": 0.54,
+        "spare": 43.59
       },
       "issues": []
     }
